@@ -1,11 +1,10 @@
-###GoDeploy *work in progress*
+###GoDeploy
 
-*it's actually a spec for me while it's in development :)*
 Simple ssh deploy tool:
 - build a binary using cross-compilation
-- copy over to a remote server (or multiple servers at once)
+- copy over to your remote server (or multiple servers at once)
 - restart binary over ssh
-- integrate with slack
+- send notifications to Slack
 
 ###Installation
 

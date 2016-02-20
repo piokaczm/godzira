@@ -43,8 +43,7 @@ func buildBinary(config *Configuration) {
 	fmt.Println("Building binary...")
 	err := cmd.Run()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		checkErr(err)
 	} else {
 		fmt.Println("Build succeeded!")
 	}
@@ -124,9 +123,9 @@ func runCommand(name string, args []string, start_msg string, finish_msg string,
 	if err != nil {
 		if name == "rsync" {
 			errorMsg(config)
-			printErr(err)
+			checkErr(err)
 		} else {
-			printErr(err)
+			checkErr(err)
 		}
 	} else {
 		fmt.Println(finish_msg)

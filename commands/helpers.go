@@ -22,11 +22,6 @@ func slackEnabled(slack map[string]string) bool {
 	}
 }
 
-func printErr(e error) {
-	fmt.Println(e)
-	os.Exit(1)
-}
-
 func checkErr(e error) {
 	if e != nil {
 		panic(e)

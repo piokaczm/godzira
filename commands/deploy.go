@@ -93,7 +93,7 @@ func copyBinary(binary string, args []string, config *Configuration) {
 }
 
 // run all tests before deploy
-// if any of them fails stop deploying
+// if one of them fails stop deploying
 func runTests(config *Configuration) {
 	runCommand(
 		"go",

@@ -9,22 +9,31 @@ Simple ssh deploy tool:
 
 ###Installation
 
-`go get github.com/piokaczm/godeploy`
+```
+go get github.com/piokaczm/godeploy
+```
 
 then
 
-`go install`
+```
+go install
+```
 
 ###Usage
 
 In your app directory run
 
-`godeploy init`
+```
+godeploy init
+```
 
 It creates config directory with empty `deploy.yml` config file.
+
 After setting it up just run
 
-`godeploy deploy [environment]`
+```
+godeploy deploy [environment]
+```
 
 Depending on your config it restores dependencies, runs tests, builds binary, copies it over to your server(s) and sends notification to your Slack.
 
@@ -33,20 +42,20 @@ Depending on your config it restores dependencies, runs tests, builds binary, co
 First of all you need to properly set your configuration file. Structure should look something like this:
 
 ```
-appname: NewApp # used for slack integration - it'll be used in msgs
-goos: linux # variables needed to properly crosscompile for your machine
+appname: NewApp # optional, unless you're using slack integration
+goos: linux # cross-compilation variables
 goarch: amd64
-test: true # only if you want to run all test before deploy, defaults to false
+test: true # only if you want to run all tests before deploy, defaults to false
 godep: true # only if you're using godep and want to run godep restore before building a binary, defaults to false
 
 environments:
-  staging: # this is cli argument you'll be using to deploy to choosen env
-    host: example.net # no need for specyfing number when deploying to one host only
+  staging: # it's [environment] for deploy command, name it as you wish
+    host: example.net # no need for adding a digit when deploying to one server only
     user: example_user
     path: binaries/
     restart_command: etc/init.d/daemon restart
   production:
-    host_1: anotherexample.net # the tool matches host and user using the provided digit, so make sure to fill it properly
+    host_1: anotherexample.net # godeploy matches host and user using the provided digit, so make sure to fill it properly
     user_1: user_1
     host_2: anotherexample2.net
     user_2: user_2

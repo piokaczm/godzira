@@ -8,8 +8,9 @@ import (
 	"strings"
 )
 
+// is it really necessary to pass config to so all those functions?
 func Deploy(c *cli.Context) {
-	deploy_env := c.Args()[0]
+	deploy_env := c.Args()[0] // try to extract it somehow
 
 	config := getConfig()
 	servers, err := getServers(&config, deploy_env)
@@ -29,6 +30,7 @@ func Deploy(c *cli.Context) {
 
 // cross-compile binary using provided config
 func buildBinary(config *Configuration) {
+	// try to rewrite runCommand so there is not so much duplication
 	goos := config.Goos
 	goarch := config.Goarch
 
@@ -54,9 +56,9 @@ func runDeploy(config *Configuration, servers map[string]string, env string) {
 	binary := getDir()
 
 	fmt.Println("Starting deployment!")
-	if slackEnabled(config.Slack) {
+	if slackEnabled(config.Slack) { // this should be configure method, why bother with passing dep
 		startMsg(config, env)
-		fmt.Println("Slack notified")
+		fmt.Println("Slack notified") // move it inside msg method or delete it
 	}
 
 	for _, value := range servers {
@@ -71,6 +73,7 @@ func runDeploy(config *Configuration, servers map[string]string, env string) {
 		finishMsg(config, env)
 		fmt.Println("Slack notified")
 	}
+	// add some stupid ascii art as success message
 }
 
 // restart binary via ssh

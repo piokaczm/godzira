@@ -26,11 +26,12 @@ func parseConfig(data []byte) Configuration {
 // create map of servers to deploy to
 // { server_1: cos@cos.net, server_2: cos2@cos2.net }
 func getServers(config *Configuration, env string) (map[string]string, error) {
+	// maybe store user@host already in the struct? separate user and host are not really used right now
 	servers := make(map[string]string)
 	i := 1
 	for key, value := range config.Environments[env] {
 
-		pattern := regexp.MustCompile("^(host)(_)?(\\d+)?$")
+		pattern := regexp.MustCompile("^(host)(_)?(\\d+)?$") // it's stupid why 3 groups, 2 should be enough, _ is mandatory for multiple hosts
 		if pattern.MatchString(key) {
 			// if key == 'host' or 'host_[digit]'
 			digit := regexp.MustCompile("^\\d+$")
@@ -38,9 +39,10 @@ func getServers(config *Configuration, env string) (map[string]string, error) {
 
 			no := strconv.Itoa(i)
 			var host_number string
-			server := []string{"server_", no}
-			new_key := strings.Join(server, "")
+			server := []string{"server_", no}   // look down m8
+			new_key := strings.Join(server, "") // its not necessery, those keys are not used anywhere, name it via key i guess
 
+			// try to handle it smarter
 			if len(match) >= 3 {
 				host_number = match[3]
 			} else {

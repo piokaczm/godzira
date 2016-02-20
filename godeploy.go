@@ -10,6 +10,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "godeploy"
 	app.Version = "0.0.1"
+	// add more precise description, add some better help text for deploy
 	app.Usage = "Simply deploy binaries to remote server"
 	app.Commands = []cli.Command{
 		{

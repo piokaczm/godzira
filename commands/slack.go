@@ -25,7 +25,6 @@ func finishMsg(config *Configuration, env string) {
 	sendMsg(msg, "good", config)
 }
 
-// msg_error=":crocodile: Something went *wrong*!"
 func errorMsg(config *Configuration) {
 	msg := ":crocodile: Something went *wrong*!"
 

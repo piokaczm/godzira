@@ -3,22 +3,28 @@ package commands
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"reflect"
+	"strings"
 	"testing"
 )
 
-func runCommand(name string, args []string, start_msg string, finish_msg string) {
-	fmt.Println(start_msg)
+func getDir() string {
+	wd, _ := os.Getwd()
+	dir := strings.Split(wd, "/")
+	return fmt.Sprint(dir[len(dir)-1])
+}
 
-	err := exec.Command(name, args...).Run()
-
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+func slackEnabled(slack map[string]string) bool {
+	if len(slack) == 0 {
+		return false
 	} else {
-		fmt.Println(finish_msg)
+		return true
 	}
+}
+
+func printErr(e error) {
+	fmt.Fprintln(os.Stderr, e)
+	os.Exit(1)
 }
 
 func checkErr(e error) {

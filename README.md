@@ -12,6 +12,7 @@ Simple deploy tool:
 First of all you need to properly set your configuration file. Structure should look something like this:
 
 ```
+appname: NewApp # used for slack integration - it'll be used in msgs
 goos: linux # variables needed to properly crosscompile for your machine
 goarch: amd64
 test: true # only if you want to run all test before deploy, defaults to false

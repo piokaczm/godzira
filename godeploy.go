@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/codegangsta/cli"
+	// "gopkg.in/yaml.v2"
 	"io"
 	"os"
 )
@@ -21,8 +22,11 @@ func main() {
 				f, err := os.Create("config/config.yml")
 				checkErr(err)
 				defer f.Close()
+				const (
+					comment = "# see example config file at github.com/piokaczm/godeploy"
+				)
 
-				io.WriteString(f, "goos: \ngoarch: \n\nenvironment: \nserver: \npath: \n\nslack_webhook: \nstart_msg: \nfinish_msg: \nslack_name: \nslack_emoji: ")
+				io.WriteString(f, comment)
 			},
 		},
 		{

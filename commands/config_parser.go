@@ -9,6 +9,10 @@ import (
 	"strings"
 )
 
+func getConfig() Configuration {
+	return parseConfig(readConfig())
+}
+
 // decode yaml data and set Configuration struct fields using it
 // set user@server for choosen environment for further deploy and ssh commands
 func parseConfig(data []byte) Configuration {
@@ -19,13 +23,14 @@ func parseConfig(data []byte) Configuration {
 	return result
 }
 
+// create map of servers to deploy to
 // { server_1: cos@cos.net, server_2: cos2@cos2.net }
-func setServers(config *Configuration, env string) (map[string]string, error) {
+func getServers(config *Configuration, env string) (map[string]string, error) {
 	servers := make(map[string]string)
 	i := 1
 	for key, value := range config.Environments[env] {
 
-		pattern := regexp.MustCompile("^(host)(_)?(\\d+)?$") // we need to get int as well for user matching
+		pattern := regexp.MustCompile("^(host)(_)?(\\d+)?$")
 		if pattern.MatchString(key) {
 			// if key == 'host' or 'host_[digit]'
 			digit := regexp.MustCompile("^\\d+$")
@@ -59,6 +64,7 @@ func setServers(config *Configuration, env string) (map[string]string, error) {
 		}
 	}
 
+	// if no proper key found return error
 	if len(servers) == 0 {
 		return nil, errors.New("no proper host in config file!")
 	} else {
@@ -73,7 +79,7 @@ func parseServer(user string, host string) string {
 
 // read user configuration from config/deploy.yml
 func readConfig() []byte {
-	data, err := ioutil.ReadFile("/config/deploy.yml")
+	data, err := ioutil.ReadFile("./config/deploy.yml")
 	checkErr(err)
 	return data
 }

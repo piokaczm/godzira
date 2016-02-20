@@ -18,9 +18,9 @@ func main() {
 			Action: commands.Config,
 		},
 		{
-			Name:  "deploy",
-			Usage: "build and deploy binary to remote server",
-			// Action: deployBinary,
+			Name:   "deploy",
+			Usage:  "build and deploy binary to remote server",
+			Action: commands.Deploy,
 		},
 	}
 

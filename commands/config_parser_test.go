@@ -57,7 +57,7 @@ func TestParseServer(t *testing.T) {
 
 func TestSetServerWithTwoHosts(t *testing.T) {
 	config := parseConfig([]byte(data))
-	result, _ := setServers(&config, "production")
+	result, _ := getServers(&config, "production")
 	Expect(t, result["server_1"], "pizdekmaster@real-pizda.net")
 	Expect(t, result["server_2"], "pizdekmaster2@real-pizda2.net")
 	Expect(t, len(result), 2)
@@ -65,7 +65,7 @@ func TestSetServerWithTwoHosts(t *testing.T) {
 
 func TestSetServerWithOneHost(t *testing.T) {
 	config := parseConfig([]byte(data))
-	result, _ := setServers(&config, "staging")
+	result, _ := getServers(&config, "staging")
 	Expect(t, len(result), 1)
 	Expect(t, result["server_1"], "pizdek@pizda.net")
 }

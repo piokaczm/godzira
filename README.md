@@ -1,4 +1,4 @@
-###GoDeploy
+###GoDeploy *work in progress*
 
 Simple deploy tool:
 - build a binary using cross-compilation

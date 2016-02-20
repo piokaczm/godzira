@@ -2,8 +2,9 @@ package commands
 
 import (
 	"bytes"
-	"encoding/json"
+	// "encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 )
@@ -33,10 +34,15 @@ func errorMsg(config *Configuration) {
 
 // post request to slack
 func sendMsg(msg string, msgType string, config *Configuration) {
-	json, err := json.Marshal(fmt.Sprintf(`{ "attachments": [{"mrkdwn_in": ["text"], "color": "%s", "text": "%s"}`, msgType, msg))
-	checkErr(err)
+	data := []byte(fmt.Sprintf(`{"attachments": [{"mrkdwn_in": ["text"], "color": "%s", "text": "%s"}]}`, msgType, msg))
 	url := config.Slack["webhook"]
 
-	r, _ := http.NewRequest("POST", url, bytes.NewBuffer(json))
+	r, _ := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	r.Header.Add("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(r)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
 }

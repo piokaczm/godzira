@@ -58,11 +58,13 @@ func runDeploy(config *Configuration, servers map[string]string, env string) {
 	fmt.Println("Starting deployment!")
 	if slackEnabled(config.Slack) {
 		startMsg(config, env)
+		fmt.Println("Slack notified")
 	}
 
 	for _, value := range servers {
 		path := strings.Join([]string{value, config.Environments[env]["path"]}, ":")
 		args := []string{"-chavzP", binary, path}
+		// fmt.Printf("%v, %v", args, path)
 		copyBinary(binary, args, config)
 		runRestart(value, config.Environments[env]["restart"], config)
 	}
@@ -70,6 +72,7 @@ func runDeploy(config *Configuration, servers map[string]string, env string) {
 	fmt.Println("Deployment succeeded! ;))))")
 	if slackEnabled(config.Slack) {
 		finishMsg(config, env)
+		fmt.Println("Slack notified")
 	}
 }
 

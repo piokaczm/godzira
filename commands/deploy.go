@@ -26,6 +26,8 @@ func Deploy(c *cli.Context) {
 
 // }
 
+// run all tests before deploy
+// if any of them fails stop deploying
 func runTests() {
 	runCommand(
 		"go",
@@ -34,6 +36,7 @@ func runTests() {
 		"Tests Passed")
 }
 
+// restore all dependencies before deploy
 func restoreDependencies() {
 	runCommand(
 		"godep",

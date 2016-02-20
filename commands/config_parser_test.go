@@ -5,6 +5,7 @@ import (
 )
 
 var data = `
+appname: Dupa
 goos: linux
 goarch: amd64
 test: true
@@ -32,6 +33,7 @@ slack:
 
 func TestParsing(t *testing.T) {
 	result := parseConfig([]byte(data))
+	Expect(t, result.AppName, "Dupa")
 	Expect(t, result.Goos, "linux")
 	Expect(t, result.Goarch, "amd64")
 	Expect(t, result.Test, true)

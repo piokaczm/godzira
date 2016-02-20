@@ -35,10 +35,12 @@ func buildBinary(config *Configuration) {
 	name := "go"
 	args := []string{"build"}
 	env := os.Environ()
-	env = append(env, fmt.Sprintf("GOOS=%s GOARCH=%s", goos, goarch))
+	env = append(env, fmt.Sprintf("GOOS=%s", goos))
+	env = append(env, fmt.Sprintf("GOARCH=%s", goarch))
 
 	cmd := exec.Command(name, args...)
 	cmd.Env = env
+	fmt.Println("Building binary...")
 	err := cmd.Run()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

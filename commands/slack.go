@@ -31,22 +31,9 @@ func errorMsg(config *Configuration) {
 	sendMsg(msg, "danger", config)
 }
 
-// prepare payload to be send via post request
-func prepareMsg(msg string, msgType string) map[string][1]map[string]string {
-	// { "attachments": [{"mrkdwn_in": ["text"], "color": "good", "text": "'"$msg_start"'"}
-	data := map[string][1]map[string]string{}
-	options := [1]map[string]string{}
-	options[0]["mrkdwn_in"] = "text"
-	options[0]["color"] = msgType
-	options[0]["text"] = msg
-	data["attachments"] = options
-
-	return data
-}
-
 // post request to slack
 func sendMsg(msg string, msgType string, config *Configuration) {
-	json, err := json.Marshal(prepareMsg(msg, msgType))
+	json, err := json.Marshal(fmt.Sprintf(`{ "attachments": [{"mrkdwn_in": ["text"], "color": "%s", "text": "%s"}`, msgType, msg))
 	checkErr(err)
 	url := config.Slack["webhook"]
 

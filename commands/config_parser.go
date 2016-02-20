@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"regexp"
@@ -19,30 +20,50 @@ func parseConfig(data []byte) Configuration {
 }
 
 // { server_1: cos@cos.net, server_2: cos2@cos2.net }
-func setServers(config *Configuration, env string) map[string]string {
+func setServers(config *Configuration, env string) (map[string]string, error) {
 	servers := make(map[string]string)
 	i := 1
 	for key, value := range config.Environments[env] {
 
 		pattern := regexp.MustCompile("^(host)(_)?(\\d+)?$") // we need to get int as well for user matching
-		digit := regexp.MustCompile("^\\d+$")
-		server_number := pattern.FindStringSubmatch(key)[2]
+		if pattern.MatchString(key) {
+			// if key == 'host' or 'host_[digit]'
+			digit := regexp.MustCompile("^\\d+$")
+			match := pattern.FindStringSubmatch(key)
 
-		if pattern.MatchString(key) && digit.MatchString(server_number) {
 			no := strconv.Itoa(i)
-
+			var host_number string
 			server := []string{"server_", no}
 			new_key := strings.Join(server, "")
 
-			user_number := []string{"user_", server_number}
-			user := strings.Join(user_number, "")
-			user = config.Environments[key][user]
+			if len(match) >= 3 {
+				host_number = match[3]
+			} else {
+				host_number = ""
+			}
 
-			servers[new_key] = parseServer(user, value)
-			i += 1
+			if digit.MatchString(host_number) {
+				// if more than one host
+				user_number := []string{"user_", host_number}
+				user := strings.Join(user_number, "")
+				user = config.Environments[env][user]
+
+				servers[new_key] = parseServer(user, value)
+				i += 1
+			} else {
+				// if only one host
+				user := config.Environments[env]["user"]
+				servers[new_key] = parseServer(user, value)
+				i += 1
+			}
 		}
 	}
-	return servers
+
+	if len(servers) == 0 {
+		return nil, errors.New("no proper host in config file!")
+	} else {
+		return servers, nil
+	}
 }
 
 func parseServer(user string, host string) string {

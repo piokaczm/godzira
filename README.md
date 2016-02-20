@@ -1,7 +1,5 @@
 ###GoDeploy
 
-### *work in progress*
-
 Simple ssh deploy tool:
 - build a binary using cross-compilation
 - copy over to your remote server (or multiple servers at once)

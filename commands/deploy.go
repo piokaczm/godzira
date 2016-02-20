@@ -52,8 +52,7 @@ func buildBinary(config *Configuration) {
 
 // actual deployment
 func runDeploy(config *Configuration, servers map[string]string, env string) {
-	binary, e := exec.LookPath(getDir())
-	checkErr(e)
+	binary := getDir()
 
 	fmt.Println("Starting deployment!")
 	if slackEnabled(config.Slack) {
@@ -64,9 +63,8 @@ func runDeploy(config *Configuration, servers map[string]string, env string) {
 	for _, value := range servers {
 		path := strings.Join([]string{value, config.Environments[env]["path"]}, ":")
 		args := []string{"-chavzP", binary, path}
-		// fmt.Printf("%v, %v", args, path)
 		copyBinary(binary, args, config)
-		runRestart(value, config.Environments[env]["restart"], config)
+		runRestart(value, config.Environments[env]["restart_command"], config)
 	}
 
 	fmt.Println("Deployment succeeded! ;))))")

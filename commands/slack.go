@@ -2,9 +2,7 @@ package commands
 
 import (
 	"bytes"
-	// "encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 )

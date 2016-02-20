@@ -24,7 +24,7 @@ func setServers(config *Configuration, env string) map[string]string {
 	i := 1
 	for key, value := range config.Environments[env] {
 
-		pattern := regexp.MustCompile("^(server)(_)?(\\d+)?$") // we need to get int as well for user matching
+		pattern := regexp.MustCompile("^(host)(_)?(\\d+)?$") // we need to get int as well for user matching
 		digit := regexp.MustCompile("^\\d+$")
 		server_number := pattern.FindStringSubmatch(key)[2]
 

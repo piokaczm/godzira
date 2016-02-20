@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/codegangsta/cli"
-	// "gopkg.in/yaml.v2"
 	"github.com/piokaczm/godeploy/commands"
 	"os"
 )

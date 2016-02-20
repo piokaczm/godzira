@@ -2,27 +2,30 @@ package commands
 
 import (
 	"github.com/codegangsta/cli"
-	"ioutil"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
 )
 
 func Deploy(c *cli.Context) {
 }
 
-func parseConfig() Configuration {
+func parseConfig(data []byte) Configuration {
 	result := Configuration{}
-
-	data, err := ioutil.ReadFile("/config/deploy.yml")
-	checkErr(err)
-
-	err = yaml.Unmarshall([]byte(data), &result)
+	err := yaml.Unmarshal([]byte(data), &result)
 	checkErr(err)
 
 	return result
 }
 
+func readConfig() []byte {
+	data, err := ioutil.ReadFile("/config/deploy.yml")
+	checkErr(err)
+	return data
+}
+
 type Configuration struct {
 	Goos         string
 	Goarch       string
-	Environments map[string]map[string]string
-	Slack        map[string]string
+	Environments map[string]map[string]string `yaml:"environments"`
+	Slack        map[string]string            `yaml:"slack"`
 }

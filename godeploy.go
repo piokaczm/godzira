@@ -9,7 +9,7 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "godeploy"
-	app.EnableBashCompletion = true
+	app.Version = "0.0.1"
 	app.Usage = "Simply deploy binaries to remote server"
 	app.Commands = []cli.Command{
 		{

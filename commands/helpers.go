@@ -23,7 +23,7 @@ func slackEnabled(slack map[string]string) bool {
 }
 
 func printErr(e error) {
-	fmt.Fprintln(os.Stderr, e)
+	fmt.Println(e)
 	os.Exit(1)
 }
 

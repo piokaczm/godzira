@@ -9,7 +9,7 @@ import (
 )
 
 func Deploy(c *cli.Context) {
-	deploy_env := c.Args()[1]
+	deploy_env := c.Args()[0]
 
 	config := getConfig()
 	servers, err := getServers(&config, deploy_env)

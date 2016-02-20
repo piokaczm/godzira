@@ -5,11 +5,11 @@ import (
 )
 
 func Deploy(c *cli.Context) {
-	// deploy_env := c.Args()[1]
+	deploy_env := c.Args()[1]
 
 	config := getConfig()
-	// servers, err := getServers(config, deploy_env)
-	// checkErr(err)
+	servers, err := getServers(&config, deploy_env)
+	checkErr(err)
 
 	if config.Godep {
 		restoreDependencies()
@@ -19,12 +19,16 @@ func Deploy(c *cli.Context) {
 		runTests()
 	}
 
-	// startDeploy()
+	buildBinary(config)
+	runDeploy(&config, servers, deploy_env)
 }
 
-// func startDeploy() {
+func runDeploy(config *Configuration, servers map[string]string, env string) {
+	if len(config.Slack) != 0 {
+		startMsg(config, env)
+	}
 
-// }
+}
 
 // run all tests before deploy
 // if any of them fails stop deploying

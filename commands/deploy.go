@@ -67,11 +67,10 @@ func runDeploy(config *Configuration, servers []string, env string) {
 		checkErr(e)
 	}
 
-	fmt.Println("Deployment succeeded! ;))))")
+	fmt.Println(deployed)
 	if slackEnabled(config.Slack) {
 		finishMsg(config.Slack, env)
 	}
-	// add some stupid ascii art as success message
 }
 
 // restart binary via ssh

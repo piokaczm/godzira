@@ -1,6 +1,6 @@
 ###GoDeploy
 
-Simple ssh deploy tool:
+Simple deploy tool:
 - build a binary using cross-compilation
 - copy over to your remote server (or multiple servers at once)
 - restart binary over ssh
@@ -38,7 +38,7 @@ Depending on your config it restores dependencies, runs tests, builds binary, co
 
 ###Configuration
 
-First of all you need to properly set your configuration file. Structure should look something like this:
+You need to properly set your configuration file. Structure should look something like this:
 
 ```
 goos: linux # cross-compilation variables

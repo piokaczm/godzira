@@ -1,4 +1,5 @@
-###GoDeploy
+####GoDeploy
+[![Build Status](https://travis-ci.org/piokaczm/godeploy.svg?branch=master)](https://travis-ci.org/piokaczm/godeploy)
 
 Simple deploy tool:
 - build a binary using cross-compilation

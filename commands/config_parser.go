@@ -37,14 +37,14 @@ func getServers(environments map[string]map[string]string, env string) ([]string
 	servers := []string{}
 	for key, value := range environments[env] {
 
-		pattern := regexp.MustCompile("^(host)(_\\d+)?$") // it's stupid why 3 groups, 2 should be enough, _ is mandatory for multiple hosts
+		pattern := regexp.MustCompile("^(host)(_\\d+)?$")
 		if pattern.MatchString(key) {
 			// if key == 'host' or 'host_[digit]'
 			digit := regexp.MustCompile("\\d+")
 			match := digit.FindStringSubmatch(key)
-			multiple_servers := len(match) != 0
+			multiple_hosts := len(match) != 0
 
-			if multiple_servers {
+			if multiple_hosts {
 				// if more than one host
 				host_number := match[0]
 				user_number := []string{"user_", host_number}

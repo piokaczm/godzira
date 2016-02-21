@@ -12,12 +12,6 @@ Simple deploy tool:
 go get github.com/piokaczm/godeploy
 ```
 
-then
-
-```
-go install
-```
-
 ###Usage
 
 In your app directory run

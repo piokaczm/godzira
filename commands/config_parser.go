@@ -2,7 +2,7 @@ package commands
 
 import (
 	"errors"
-	"gopkg.in/yaml.v2"
+	"github.com/piokaczm/godeploy/Godeps/_workspace/src/gopkg.in/yaml.v2"
 	"io/ioutil"
 	"regexp"
 	"strings"

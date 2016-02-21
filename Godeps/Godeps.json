@@ -1,5 +1,15 @@
 {
-	"ImportPath": ".",
+	"ImportPath": "github.com/piokaczm/godeploy",
 	"GoVersion": "go1.5",
-	"Deps": []
+	"Deps": [
+		{
+			"ImportPath": "github.com/codegangsta/cli",
+			"Comment": "1.2.0-217-g5db7419",
+			"Rev": "5db74198dee1cfe60cf06a611d03a420361baad6"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "f7716cbe52baa25d2e9b0d0da546fcf909fc16b4"
+		}
+	]
 }

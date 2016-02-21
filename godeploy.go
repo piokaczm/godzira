@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/codegangsta/cli"
+	"github.com/piokaczm/godeploy/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/piokaczm/godeploy/commands"
 	"os"
 )

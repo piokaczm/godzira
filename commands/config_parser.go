@@ -5,9 +5,16 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"regexp"
-	"strconv"
 	"strings"
 )
+
+// func (config *Configuration) slackEnabled(bool) {
+// 	if len(config.Slack) == 0 {
+// 		return false
+// 	} else {
+// 		return true
+// 	}
+// }
 
 func getConfig() Configuration {
 	return parseConfig(readConfig())
@@ -25,41 +32,30 @@ func parseConfig(data []byte) Configuration {
 
 // create map of servers to deploy to
 // { server_1: cos@cos.net, server_2: cos2@cos2.net }
-func getServers(config *Configuration, env string) (map[string]string, error) {
-	servers := make(map[string]string)
-	i := 1
-	for key, value := range config.Environments[env] {
+func getServers(environments map[string]map[string]string, env string) ([]string, error) {
+	// maybe store user@host already in the struct? separate user and host are not really used right now
+	servers := []string{}
+	for key, value := range environments[env] {
 
-		pattern := regexp.MustCompile("^(host)(_)?(\\d+)?$")
+		pattern := regexp.MustCompile("^(host)(_\\d+)?$") // it's stupid why 3 groups, 2 should be enough, _ is mandatory for multiple hosts
 		if pattern.MatchString(key) {
 			// if key == 'host' or 'host_[digit]'
-			digit := regexp.MustCompile("^\\d+$")
-			match := pattern.FindStringSubmatch(key)
+			digit := regexp.MustCompile("\\d+")
+			match := digit.FindStringSubmatch(key)
+			multiple_servers := len(match) != 0
 
-			no := strconv.Itoa(i)
-			var host_number string
-			server := []string{"server_", no}
-			new_key := strings.Join(server, "")
-
-			if len(match) >= 3 {
-				host_number = match[3]
-			} else {
-				host_number = ""
-			}
-
-			if digit.MatchString(host_number) {
+			if multiple_servers {
 				// if more than one host
+				host_number := match[0]
 				user_number := []string{"user_", host_number}
 				user := strings.Join(user_number, "")
-				user = config.Environments[env][user]
+				user = environments[env][user]
 
-				servers[new_key] = parseServer(user, value)
-				i += 1
+				servers = append(servers, parseServer(user, value))
 			} else {
 				// if only one host
-				user := config.Environments[env]["user"]
-				servers[new_key] = parseServer(user, value)
-				i += 1
+				user := environments[env]["user"]
+				servers = append(servers, parseServer(user, value))
 			}
 		}
 	}

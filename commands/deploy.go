@@ -101,7 +101,7 @@ func runTests() error {
 		"go",
 		[]string{"test", "-v", "./..."},
 		"Running tests...",
-		"Tests Passed")
+		"Tests passed!")
 	return err
 }
 

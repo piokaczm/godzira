@@ -56,8 +56,7 @@ func TestParseServer(t *testing.T) {
 func TestSetServerWithTwoHosts(t *testing.T) {
 	config := parseConfig([]byte(data))
 	result, _ := getServers(config.Environments, "production")
-	Expect(t, result[0], "pizdekmaster@real-pizda.net")
-	Expect(t, result[1], "pizdekmaster2@real-pizda2.net")
+	DeepExpect(t, result, []string{"pizdekmaster@real-pizda.net", "pizdekmaster2@real-pizda2.net"})
 	Expect(t, len(result), 2)
 }
 

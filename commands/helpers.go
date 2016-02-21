@@ -57,3 +57,10 @@ func Expect(t *testing.T, a interface{}, b interface{}) {
 		t.Errorf("Expected %v (type %v) - Got %v (type %v)", b, reflect.TypeOf(b), a, reflect.TypeOf(a))
 	}
 }
+
+func DeepExpect(t *testing.T, a interface{}, b interface{}) {
+	eq := reflect.DeepEqual(a, b)
+	if eq != true {
+		t.Errorf("Expected %v (type %v) - Got %v (type %v)", b, reflect.TypeOf(b), a, reflect.TypeOf(a))
+	}
+}

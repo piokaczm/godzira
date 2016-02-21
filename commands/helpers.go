@@ -14,7 +14,7 @@ func getDir() string {
 	return fmt.Sprint(dir[len(dir)-1])
 }
 
-// make it config function
+// maybe make it config func
 func slackEnabled(slack map[string]string) bool {
 	if len(slack) == 0 {
 		return false

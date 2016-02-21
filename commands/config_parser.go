@@ -5,7 +5,6 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -33,22 +32,17 @@ func parseConfig(data []byte) Configuration {
 
 // create map of servers to deploy to
 // { server_1: cos@cos.net, server_2: cos2@cos2.net }
-func getServers(config *Configuration, env string) (map[string]string, error) {
+func getServers(environments map[string]map[string]string, env string) ([]string, error) {
 	// maybe store user@host already in the struct? separate user and host are not really used right now
-	servers := make(map[string]string)
-	i := 1
-	for key, value := range config.Environments[env] {
+	servers := []string{}
+	for key, value := range environments[env] {
 
 		pattern := regexp.MustCompile("^(host)(_)?(\\d+)?$") // it's stupid why 3 groups, 2 should be enough, _ is mandatory for multiple hosts
 		if pattern.MatchString(key) {
 			// if key == 'host' or 'host_[digit]'
 			digit := regexp.MustCompile("^\\d+$")
 			match := pattern.FindStringSubmatch(key)
-
-			no := strconv.Itoa(i)
 			var host_number string
-			server := []string{"server_", no}   // look down m8
-			new_key := strings.Join(server, "") // its not necessery, those keys are not used anywhere, name it via key i guess
 
 			// try to handle it smarter
 			if len(match) >= 3 {
@@ -61,15 +55,13 @@ func getServers(config *Configuration, env string) (map[string]string, error) {
 				// if more than one host
 				user_number := []string{"user_", host_number}
 				user := strings.Join(user_number, "")
-				user = config.Environments[env][user]
+				user = environments[env][user]
 
-				servers[new_key] = parseServer(user, value)
-				i += 1
+				servers = append(servers, parseServer(user, value))
 			} else {
 				// if only one host
-				user := config.Environments[env]["user"]
-				servers[new_key] = parseServer(user, value)
-				i += 1
+				user := environments[env]["user"]
+				servers = append(servers, parseServer(user, value))
 			}
 		}
 	}

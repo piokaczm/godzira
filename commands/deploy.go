@@ -12,7 +12,7 @@ func Deploy(c *cli.Context) {
 	deploy_env := c.Args()[0] // try to extract it somehow
 
 	config := getConfig()
-	servers, err := getServers(&config, deploy_env)
+	servers, err := getServers(config.Environments, deploy_env)
 	checkErr(err)
 
 	if config.Godep {
@@ -50,13 +50,12 @@ func buildBinary(goarch string, goos string) {
 }
 
 // actual deployment
-func runDeploy(config *Configuration, servers map[string]string, env string) {
+func runDeploy(config *Configuration, servers []string, env string) {
 	binary := getDir()
 
 	fmt.Println("Starting deployment!")
 	if slackEnabled(config.Slack) {
 		startMsg(config.Slack, env)
-		fmt.Println("Slack notified") // move it inside msg method or delete it
 	}
 
 	for _, value := range servers {
@@ -71,7 +70,6 @@ func runDeploy(config *Configuration, servers map[string]string, env string) {
 	fmt.Println("Deployment succeeded! ;))))")
 	if slackEnabled(config.Slack) {
 		finishMsg(config.Slack, env)
-		fmt.Println("Slack notified")
 	}
 	// add some stupid ascii art as success message
 }

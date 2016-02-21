@@ -9,6 +9,14 @@ import (
 	"strings"
 )
 
+// func (config *Configuration) slackEnabled(bool) {
+// 	if len(config.Slack) == 0 {
+// 		return false
+// 	} else {
+// 		return true
+// 	}
+// }
+
 func getConfig() Configuration {
 	return parseConfig(readConfig())
 }

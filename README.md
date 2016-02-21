@@ -41,7 +41,6 @@ Depending on your config it restores dependencies, runs tests, builds binary, co
 First of all you need to properly set your configuration file. Structure should look something like this:
 
 ```
-appname: NewApp # optional, unless you're using slack integration
 goos: linux # cross-compilation variables
 goarch: amd64
 test: true # only if you want to run all tests before deploy, defaults to false
@@ -63,4 +62,5 @@ environments:
 
 slack: # optional
   webhook: https://hooks.slack.com/services/xxx/xxx # no more custom settings for now, please select emoji, name etc. via Slack
+  appname: AppName
 ```

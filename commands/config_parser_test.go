@@ -5,7 +5,6 @@ import (
 )
 
 var data = `
-appname: Dupa
 goos: linux
 goarch: amd64
 test: true
@@ -27,20 +26,17 @@ environments:
 
 slack:
   webhook: https://hooks.slack.com/services/sth/more
-  emoji: ":rocket:"
-  botname: bot
+  appname: AppName
 `
 
 func TestParsing(t *testing.T) {
 	result := parseConfig([]byte(data))
-	Expect(t, result.AppName, "Dupa")
 	Expect(t, result.Goos, "linux")
 	Expect(t, result.Goarch, "amd64")
 	Expect(t, result.Test, true)
 	Expect(t, result.Godep, true)
 	Expect(t, result.Slack["webhook"], "https://hooks.slack.com/services/sth/more")
-	Expect(t, result.Slack["emoji"], ":rocket:")
-	Expect(t, result.Slack["botname"], "bot")
+	Expect(t, result.Slack["appname"], "AppName")
 	Expect(t, result.Environments["staging"]["host"], "pizda.net")
 	Expect(t, result.Environments["staging"]["user"], "pizdek")
 	Expect(t, result.Environments["staging"]["path"], "binaries/")

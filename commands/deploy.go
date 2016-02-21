@@ -8,7 +8,6 @@ import (
 	"strings"
 )
 
-// is it really necessary to pass config to so all those functions?
 func Deploy(c *cli.Context) {
 	deploy_env := c.Args()[0] // try to extract it somehow
 
@@ -17,23 +16,22 @@ func Deploy(c *cli.Context) {
 	checkErr(err)
 
 	if config.Godep {
-		restoreDependencies(&config)
+		e := restoreDependencies()
+		checkErr(e)
 	}
 
 	if config.Test {
-		runTests(&config)
+		e := runTests()
+		checkErr(e)
 	}
 
-	buildBinary(&config)
+	buildBinary(config.Goarch, config.Goos)
 	runDeploy(&config, servers, deploy_env)
 }
 
 // cross-compile binary using provided config
-func buildBinary(config *Configuration) {
+func buildBinary(goarch string, goos string) {
 	// try to rewrite runCommand so there is not so much duplication
-	goos := config.Goos
-	goarch := config.Goarch
-
 	name := "go"
 	args := []string{"build"}
 	env := os.Environ()
@@ -56,81 +54,78 @@ func runDeploy(config *Configuration, servers map[string]string, env string) {
 	binary := getDir()
 
 	fmt.Println("Starting deployment!")
-	if slackEnabled(config.Slack) { // this should be configure method, why bother with passing dep
-		startMsg(config, env)
+	if slackEnabled(config.Slack) {
+		startMsg(config.Slack, env)
 		fmt.Println("Slack notified") // move it inside msg method or delete it
 	}
 
 	for _, value := range servers {
 		path := strings.Join([]string{value, config.Environments[env]["path"]}, ":")
 		args := []string{"-chavzP", binary, path}
-		copyBinary(binary, args, config)
-		runRestart(value, config.Environments[env]["restart_command"], config)
+		err := copyBinary(args)
+		checkErrWithMsg(err, config.Slack)
+		e := runRestart(value, config.Environments[env]["restart_command"])
+		checkErr(e)
 	}
 
 	fmt.Println("Deployment succeeded! ;))))")
 	if slackEnabled(config.Slack) {
-		finishMsg(config, env)
+		finishMsg(config.Slack, env)
 		fmt.Println("Slack notified")
 	}
 	// add some stupid ascii art as success message
 }
 
 // restart binary via ssh
-func runRestart(server string, command string, config *Configuration) {
+func runRestart(server string, command string) error {
 	args := append([]string{server}, strings.Split(command, " ")...)
-	runCommand(
+	err := runCommand(
 		"ssh",
 		args,
 		"Restarting binary...",
-		"Binary restarted!",
-		config)
+		"Binary restarted!")
+	return err
 }
 
 // rsync binary to server(s) listed in the config file
-func copyBinary(binary string, args []string, config *Configuration) {
-	runCommand(
+func copyBinary(args []string) error {
+	err := runCommand(
 		"rsync",
 		args,
 		"Deploying...",
-		"Deploy succeeded!",
-		config)
+		"Deploy succeeded!")
+	return err
 }
 
 // run all tests before deploy
 // if one of them fails stop deploying
-func runTests(config *Configuration) {
-	runCommand(
+func runTests() error {
+	err := runCommand(
 		"go",
 		[]string{"test", "-v", "./..."},
 		"Running tests...",
-		"Tests Passed",
-		config)
+		"Tests Passed")
+	return err
 }
 
 // restore all dependencies before deploy
-func restoreDependencies(config *Configuration) {
-	runCommand(
+func restoreDependencies() error {
+	err := runCommand(
 		"godep",
 		[]string{"restore"},
 		"Restoring dependencies...",
-		"Dependencies restored!",
-		config)
+		"Dependencies restored!")
+	return err
 }
 
-func runCommand(name string, args []string, start_msg string, finish_msg string, config *Configuration) {
+func runCommand(name string, args []string, start_msg string, finish_msg string) error {
 	fmt.Println(start_msg)
 
 	err := exec.Command(name, args...).Run()
-
 	if err != nil {
-		if name == "rsync" {
-			errorMsg(config)
-			checkErr(err)
-		} else {
-			checkErr(err)
-		}
+		return err
 	} else {
 		fmt.Println(finish_msg)
+		return nil
 	}
 }

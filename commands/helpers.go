@@ -23,6 +23,13 @@ func slackEnabled(slack map[string]string) bool {
 	}
 }
 
+func checkErrWithMsg(e error, slackConfig map[string]string) {
+	if e != nil {
+		errorMsg(slackConfig)
+		panic(e)
+	}
+}
+
 func checkErr(e error) {
 	if e != nil {
 		panic(e)

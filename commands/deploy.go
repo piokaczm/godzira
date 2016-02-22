@@ -2,7 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"github.com/piokaczm/godeploy/Godeps/_workspace/src/github.com/codegangsta/cli"
+	"github.com/codegangsta/cli"
 	"os"
 	"os/exec"
 	"strings"

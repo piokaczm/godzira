@@ -21,7 +21,7 @@ func Deploy(c *cli.Context) {
 	}
 
 	if config.Test {
-		e := runTests()
+		e := runTests(config.Vendor)
 		checkErr(e)
 	}
 
@@ -96,13 +96,39 @@ func copyBinary(args []string) error {
 
 // run all tests before deploy
 // if one of them fails stop deploying
-func runTests() error {
+func runTests(vendor bool) error {
+	args := []string{"test", "-v"}
+	if vendor {
+		dirs, e := filterVendor()
+		checkErr(e)
+		args = append([]string{"test", "-v"}, dirs...)
+	}
+
 	err := runCommand(
 		"go",
-		[]string{"test", "-v", "./..."},
+		args,
 		"Running tests...",
 		"Tests passed!")
 	return err
+}
+
+// filter out /vendor dir for tests
+// if app uses vendor experiment
+func filterVendor() ([]string, error) {
+	list := exec.Command("go", "list", "./...")
+	grep := exec.Command("grep", "-v", "/vendor/")
+	listOut, _ := list.StdoutPipe()
+	list.Start()
+	grep.Stdin = listOut
+
+	out, err := grep.Output()
+	if err != nil {
+		return nil, err
+	} else {
+		dirs := strings.Split(string(out), "\n")
+		dirs = dirs[:len(dirs)-1]
+		return dirs, nil
+	}
 }
 
 // restore all dependencies before deploy

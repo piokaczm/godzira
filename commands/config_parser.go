@@ -87,4 +87,5 @@ type Configuration struct {
 	Slack        map[string]string            `yaml:"slack"`
 	Test         bool                         `yaml:"test"`
 	Godep        bool                         `yaml:"godep"`
+	Vendor       bool                         `yaml:"vendor"`
 }

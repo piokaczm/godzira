@@ -1,4 +1,4 @@
-####GoDeploy
+#GoDeploy
 [![Build Status](https://travis-ci.org/piokaczm/godeploy.svg?branch=master)](https://travis-ci.org/piokaczm/godeploy)
 
 Simple deploy tool:
@@ -38,6 +38,7 @@ You need to properly set your configuration file. Structure should look somethin
 ```
 goos: linux # cross-compilation variables
 goarch: amd64
+vendor: true # if you're using vendor experiment and want to filter out vendor dir (damn you go!)
 test: true # only if you want to run all tests before deploy, defaults to false
 godep: true # only if you're using godep and want to run godep restore before building a binary, defaults to false
 

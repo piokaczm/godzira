@@ -21,7 +21,7 @@ func Deploy(c *cli.Context) {
 	}
 
 	if config.Test {
-		e := runTests()
+		e := runTests(config.Vendor)
 		checkErr(e)
 	}
 
@@ -97,10 +97,14 @@ func copyBinary(args []string) error {
 // run all tests before deploy
 // if one of them fails stop deploying
 // "$(go list ./... | grep -v /vendor/)
-func runTests() error {
-	dirs, e := filterVendor()
-	checkErr(e)
-	args := append([]string{"test", "-v"}, dirs...)
+func runTests(vendor bool) error {
+	args := []string{"test", "-v"}
+	if vendor {
+		dirs, e := filterVendor()
+		checkErr(e)
+		args = append([]string{"test", "-v"}, dirs...)
+	}
+
 	err := runCommand(
 		"go",
 		args,
@@ -109,6 +113,8 @@ func runTests() error {
 	return err
 }
 
+// filter out /vendor dir for tests
+// if app uses vendor experiment
 func filterVendor() ([]string, error) {
 	list := exec.Command("go", "list", "./...")
 	grep := exec.Command("grep", "-v", "/vendor/")

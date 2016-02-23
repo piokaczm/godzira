@@ -101,7 +101,9 @@ func runTests(vendor bool) error {
 	if vendor {
 		dirs, e := filterVendor()
 		checkErr(e)
-		args = append([]string{"test", "-v"}, dirs...)
+		args = append(args, dirs...)
+	} else {
+		args = append(args, "./...")
 	}
 
 	err := runCommand(

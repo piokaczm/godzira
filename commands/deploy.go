@@ -96,13 +96,34 @@ func copyBinary(args []string) error {
 
 // run all tests before deploy
 // if one of them fails stop deploying
+// "$(go list ./... | grep -v /vendor/)
 func runTests() error {
+	dirs, e := filterVendor()
+	checkErr(e)
+	args := append([]string{"test", "-v"}, dirs...)
 	err := runCommand(
 		"go",
-		[]string{"test", "-v", "./..."},
+		args,
 		"Running tests...",
 		"Tests passed!")
 	return err
+}
+
+func filterVendor() ([]string, error) {
+	list := exec.Command("go", "list", "./...")
+	grep := exec.Command("grep", "-v", "/vendor/")
+	listOut, _ := list.StdoutPipe()
+	list.Start()
+	grep.Stdin = listOut
+
+	out, err := grep.Output()
+	if err != nil {
+		return nil, err
+	} else {
+		dirs := strings.Split(string(out), "\n")
+		dirs = dirs[:len(dirs)-1]
+		return dirs, nil
+	}
 }
 
 // restore all dependencies before deploy

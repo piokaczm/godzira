@@ -96,7 +96,6 @@ func copyBinary(args []string) error {
 
 // run all tests before deploy
 // if one of them fails stop deploying
-// "$(go list ./... | grep -v /vendor/)
 func runTests(vendor bool) error {
 	args := []string{"test", "-v"}
 	if vendor {

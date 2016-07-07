@@ -1,11 +1,18 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"github.com/codegangsta/cli"
 	"os"
 	"os/exec"
 	"strings"
+)
+
+const (
+	scp       = "scp"
+	rsync     = "rsync"
+	rsyncArgs = "-chavzP"
 )
 
 func Deploy(c *cli.Context) {
@@ -51,7 +58,7 @@ func buildBinary(goarch string, goos string) {
 
 // actual deployment
 func runDeploy(config *Configuration, servers []string, env string) {
-	binary := getDir()
+	binary := getDir() // that's stupid, compile named file
 
 	fmt.Println("Starting deployment!")
 	if slackEnabled(config.Slack) {
@@ -60,8 +67,8 @@ func runDeploy(config *Configuration, servers []string, env string) {
 
 	for _, value := range servers {
 		path := strings.Join([]string{value, config.Environments[env]["path"]}, ":")
-		args := []string{"-chavzP", binary, path}
-		err := copyBinary(args)
+		// args := []string{"-chavzP", binary, path}
+		err := copyBinary(binary, path, config.Strategy)
 		checkErrWithMsg(err, config.Slack)
 		e := runRestart(value, config.Environments[env]["restart_command"])
 		checkErr(e)
@@ -85,9 +92,25 @@ func runRestart(server string, command string) error {
 }
 
 // rsync binary to server(s) listed in the config file
-func copyBinary(args []string) error {
+func copyBinary(binary string, path string, strategy string) error {
+	var command string
+	args := make([]string, 0, 3)
+	if strategy == "scp" {
+		command = scp
+		args = append(args, []string{binary, path}...)
+	} else if strategy == "rsync" {
+		command = rsync
+		args = append(args, []string{rsyncArgs, binary, path}...)
+	} else {
+		return errors.New("Unknown strategy, please select scp or rsync")
+	}
+	err := runCopy(command, args)
+	return err
+}
+
+func runCopy(command string, args []string) error {
 	err := runCommand(
-		"rsync",
+		command,
 		args,
 		"Deploying...",
 		"Deploy succeeded!")

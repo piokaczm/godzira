@@ -9,6 +9,7 @@ goos: linux
 goarch: amd64
 test: true
 godep: true
+strategy: scp
 
 environments:
   staging:
@@ -32,6 +33,7 @@ slack:
 func TestParsing(t *testing.T) {
 	result := parseConfig([]byte(data))
 	Expect(t, result.Goos, "linux")
+	Expect(t, result.Strategy, "scp")
 	Expect(t, result.Goarch, "amd64")
 	Expect(t, result.Test, true)
 	Expect(t, result.Godep, true)

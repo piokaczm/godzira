@@ -81,6 +81,7 @@ func readConfig() []byte {
 }
 
 type Configuration struct {
+	Strategy     string                       `yaml:"strategy"`
 	Goos         string                       `yaml:"goos"`
 	Goarch       string                       `yaml:"goarch"`
 	Environments map[string]map[string]string `yaml:"environments"`

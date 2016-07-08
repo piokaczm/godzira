@@ -41,6 +41,7 @@ goarch: amd64
 vendor: true # if you're using vendor experiment and want to filter out vendor dir (damn you go!)
 test: true # only if you want to run all tests before deploy, defaults to false
 godep: true # only if you're using godep and want to run godep restore before building a binary, defaults to false
+strategy: scp # optional
 
 environments:
   staging: # it's [environment] for deploy command, name it as you wish
@@ -60,3 +61,8 @@ slack: # optional
   webhook: https://hooks.slack.com/services/xxx/xxx # no more custom settings for now, please select emoji, name etc. via Slack
   appname: AppName
 ```
+
+###Strategy
+
+Godeploy provides two deploy strategies: `scp` and `rsync`.
+You can choose which one to use in your config file. If no strategy specified, the tool will use `rsync`.

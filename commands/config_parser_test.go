@@ -30,6 +30,31 @@ slack:
   appname: AppName
 `
 
+var dataNoStrategy = `
+goos: linux
+goarch: amd64
+test: true
+godep: true
+
+environments:
+  staging:
+    host: pizda.net
+    user: pizdek
+    path: binaries/
+    restart_command: etc/dupa/daemon restart
+  production:
+    host_1: real-pizda.net
+    user_1: pizdekmaster
+    host_2: real-pizda2.net
+    user_2: pizdekmaster2
+    path: current/binaries/
+    restart_command: etc/prod/dupa/daemon restart
+
+slack:
+  webhook: https://hooks.slack.com/services/sth/more
+  appname: AppName
+`
+
 func TestParsing(t *testing.T) {
 	result := parseConfig([]byte(data))
 	Expect(t, result.Goos, "linux")
@@ -67,4 +92,14 @@ func TestSetServerWithOneHost(t *testing.T) {
 	result, _ := getServers(config.Environments, "staging")
 	Expect(t, len(result), 1)
 	Expect(t, result[0], "pizdek@pizda.net")
+}
+
+func TestGetStrategy(t *testing.T) {
+	config := parseConfig([]byte(data))
+	result := config.getStrategy()
+	Expect(t, result, "scp")
+
+	otherConfig := parseConfig([]byte(dataNoStrategy))
+	otherResult := otherConfig.getStrategy()
+	Expect(t, otherResult, "rsync")
 }

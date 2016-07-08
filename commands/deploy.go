@@ -64,11 +64,12 @@ func runDeploy(config *Configuration, servers []string, env string) {
 	if slackEnabled(config.Slack) {
 		startMsg(config.Slack, env)
 	}
+	strategy := config.getStrategy()
 
 	for _, value := range servers {
 		path := strings.Join([]string{value, config.Environments[env]["path"]}, ":")
 		// args := []string{"-chavzP", binary, path}
-		err := copyBinary(binary, path, config.Strategy)
+		err := copyBinary(binary, path, strategy)
 		checkErrWithMsg(err, config.Slack)
 		e := runRestart(value, config.Environments[env]["restart_command"])
 		checkErr(e)

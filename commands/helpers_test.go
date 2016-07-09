@@ -6,7 +6,7 @@ import (
 )
 
 func TestSlackEnabled(t *testing.T) {
-	config := Configuration{}
+	config := parseConfig([]byte(dataNoSlack))
 	assert.Equal(t, slackEnabled(config.Slack), false)
 	config.Slack = map[string]string{"webhook": "test"}
 	assert.Equal(t, slackEnabled(config.Slack), true)

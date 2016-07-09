@@ -32,89 +32,23 @@ func Deploy(c *cli.Context) {
 		checkErr(e)
 	}
 
-	buildBinary(config.Goarch, config.Goos)
-	runDeploy(&config, servers, deploy_env)
 }
 
-// cross-compile binary using provided config
-func buildBinary(goarch string, goos string) {
-	// try to rewrite runCommand so there is not so much duplication
-	name := "go"
-	args := []string{"build"}
-	env := os.Environ()
-	env = append(env, fmt.Sprintf("GOOS=%s", goos))
-	env = append(env, fmt.Sprintf("GOARCH=%s", goarch))
+func deployApp(builder BinaryBuilder, deployer BinaryDeployer) {
+	// we should create interfaces implementing all related funcs
+	// this way we should be able to mock some of them
+	// and get better test coverage
 
-	cmd := exec.Command(name, args...)
-	cmd.Env = env
-	fmt.Println("Building binary...")
-	err := cmd.Run()
-	if err != nil {
-		checkErr(err)
-	} else {
-		fmt.Println("Build succeeded!")
-	}
-}
-
-// actual deployment
-func runDeploy(config *Configuration, servers []string, env string) {
-	binary := getDir() // that's stupid, compile named file
-
-	fmt.Println("Starting deployment!")
-	if slackEnabled(config.Slack) {
-		startMsg(config.Slack, env)
-	}
-	strategy := config.getStrategy()
-
-	for _, value := range servers {
-		path := strings.Join([]string{value, config.Environments[env]["path"]}, ":")
-		err := copyBinary(binary, path, strategy)
-		checkErrWithMsg(err, config.Slack)
-		e := runRestart(value, config.Environments[env]["restart_command"])
-		checkErr(e)
-	}
-
-	fmt.Println(deployed)
-	if slackEnabled(config.Slack) {
-		finishMsg(config.Slack, env)
-	}
-}
-
-// restart binary via ssh
-func runRestart(server string, command string) error {
-	args := append([]string{server}, strings.Split(command, " ")...)
-	err := runCommand(
-		"ssh",
-		args,
-		"Restarting binary...",
-		"Binary restarted!")
-	return err
-}
-
-// rsync binary to server(s) listed in the config file
-func copyBinary(binary string, path string, strategy string) error {
-	var command string
-	args := make([]string, 0, 3)
-	if strategy == "scp" {
-		command = scp
-		args = append(args, []string{binary, path}...)
-	} else if strategy == "rsync" {
-		command = rsync
-		args = append(args, []string{rsyncArgs, binary, path}...)
-	} else {
-		return errors.New("Unknown strategy, please select scp or rsync")
-	}
-	err := runCopy(command, args)
-	return err
-}
-
-func runCopy(command string, args []string) error {
-	err := runCommand(
-		command,
-		args,
-		"Deploying...",
-		"Deploy succeeded!")
-	return err
+	// Builder interface:
+	// - buildBinary
+	// - execCommand(?)
+	builder.buildBinary(config.Goarch, config.Goos)
+	// Deployer interface
+	// - runDeploy
+	// - copyBinary
+	// - runCopy
+	// - execCommand(?)
+	deployer.runDeploy(&config, servers, deploy_env)
 }
 
 // run all tests before deploy

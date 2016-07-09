@@ -32,23 +32,16 @@ func Deploy(c *cli.Context) {
 		checkErr(e)
 	}
 
+	builder := Builder{}
+	deployer := Deployer{}
+	deployApp(builder, deployer, config, servers, deploy_env)
 }
 
-func deployApp(builder BinaryBuilder, deployer BinaryDeployer) {
-	// we should create interfaces implementing all related funcs
-	// this way we should be able to mock some of them
-	// and get better test coverage
-
-	// Builder interface:
-	// - buildBinary
-	// - execCommand(?)
+func deployApp(builder BinaryBuilder, deployer BinaryDeployer, config Configuration, servers []string, env string) {
 	builder.buildBinary(config.Goarch, config.Goos)
-	// Deployer interface
-	// - runDeploy
-	// - copyBinary
-	// - runCopy
-	// - execCommand(?)
-	deployer.runDeploy(&config, servers, deploy_env)
+	// possibly just move servers fetching to deployer interface? why inject it here as we need it inside it
+	// and config is passed anyway?
+	deployer.runDeploy(&config, servers, env)
 }
 
 // run all tests before deploy
@@ -63,7 +56,7 @@ func runTests(vendor bool) error {
 		args = append(args, "./...")
 	}
 
-	err := runCommand(
+	err := execCommand(
 		"go",
 		args,
 		"Running tests...",
@@ -92,7 +85,7 @@ func filterVendor() ([]string, error) {
 
 // restore all dependencies before deploy
 func restoreDependencies() error {
-	err := runCommand(
+	err := execCommand(
 		"godep",
 		[]string{"restore"},
 		"Restoring dependencies...",
@@ -100,7 +93,7 @@ func restoreDependencies() error {
 	return err
 }
 
-func runCommand(name string, args []string, start_msg string, finish_msg string) error {
+func execCommand(name string, args []string, start_msg string, finish_msg string) error {
 	fmt.Println(start_msg)
 
 	err := exec.Command(name, args...).Run()

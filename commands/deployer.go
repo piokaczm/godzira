@@ -9,15 +9,15 @@ import (
 type Deployer struct{}
 
 type BinaryDeployer interface {
-	runDeploy(config *Configuration, servers []string, env string)
+	execDeploy(config *Configuration, servers []string, env string)
 	copyBinary(binary string, path string, strategy string) error
-	runCopy(command string, args []string) error
-	runRestart(command string, args []string) error
+	execCopy(command string, args []string) error
+	execRestart(command string, args []string) error
 	execCommand(name string, args []string, start_msg string, finish_msg string) error
 }
 
 // actual deployment
-func (deployer Deployer) runDeploy(config *Configuration, servers []string, env string) {
+func (deployer Deployer) execDeploy(config *Configuration, servers []string, env string) {
 	binary := getDir() // that's stupid, compile named file
 
 	fmt.Println("Starting deployment!")
@@ -28,9 +28,9 @@ func (deployer Deployer) runDeploy(config *Configuration, servers []string, env 
 
 	for _, value := range servers {
 		path := strings.Join([]string{value, config.Environments[env]["path"]}, ":")
-		err := copyBinary(binary, path, strategy)
+		err := deployer.copyBinary(binary, path, strategy)
 		checkErrWithMsg(err, config.Slack)
-		e := runRestart(value, config.Environments[env]["restart_command"])
+		e := deployer.execRestart(value, config.Environments[env]["restart_command"])
 		checkErr(e)
 	}
 
@@ -41,7 +41,7 @@ func (deployer Deployer) runDeploy(config *Configuration, servers []string, env 
 }
 
 // restart binary via ssh
-func (deployer Deployer) runRestart(server string, command string) error {
+func (deployer Deployer) execRestart(server string, command string) error {
 	args := append([]string{server}, strings.Split(command, " ")...)
 	err := runCommand(
 		"ssh",
@@ -68,7 +68,7 @@ func (deployer Deployer) copyBinary(binary string, path string, strategy string)
 	return err
 }
 
-func (deployer Deployer) runCopy(command string, args []string) error {
+func (deployer Deployer) execCopy(command string, args []string) error {
 	err := runCommand(
 		command,
 		args,
@@ -78,13 +78,5 @@ func (deployer Deployer) runCopy(command string, args []string) error {
 }
 
 func (deployer Deployer) execCommand(name string, args []string, start_msg string, finish_msg string) error {
-	fmt.Println(start_msg)
-
-	err := exec.Command(name, args...).Run()
-	if err != nil {
-		return err
-	} else {
-		fmt.Println(finish_msg)
-		return nil
-	}
+	return execCommand(name, args, start_msg, finish_msg)
 }

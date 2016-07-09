@@ -30,6 +30,13 @@ func parseConfig(data []byte) Configuration {
 	return result
 }
 
+func (config *Configuration) getStrategy() string {
+	if config.Strategy == "" {
+		return rsync
+	}
+	return config.Strategy
+}
+
 // create map of servers to deploy to
 // { server_1: cos@cos.net, server_2: cos2@cos2.net }
 func getServers(environments map[string]map[string]string, env string) ([]string, error) {
@@ -81,6 +88,7 @@ func readConfig() []byte {
 }
 
 type Configuration struct {
+	Strategy     string                       `yaml:"strategy"`
 	Goos         string                       `yaml:"goos"`
 	Goarch       string                       `yaml:"goarch"`
 	Environments map[string]map[string]string `yaml:"environments"`

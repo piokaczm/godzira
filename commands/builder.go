@@ -17,10 +17,10 @@ type Builder struct{}
 
 type BinaryBuilder interface {
 	prepareToCompilation(config *Configuration) (string, []string, []string)
-	execCommand(name string, args []string, env []string) (error, string, string)
+	execCommand(name string, args []string, env []string) (error, string)
 }
 
-func buildBinary(config *Configuration, builder BinaryBuilder) (error, string, string) {
+func buildBinary(config *Configuration, builder BinaryBuilder) (error, string) {
 	name, args, env := builder.prepareToCompilation(config)
 	return builder.execCommand(name, args, env)
 }
@@ -40,10 +40,10 @@ func (builder Builder) prepareToCompilation(config *Configuration) (string, []st
 	return name, args, env
 }
 
-func (builder Builder) execCommand(name string, args []string, env []string) (error, string, string) {
+func (builder Builder) execCommand(name string, args []string, env []string) (error, string) {
 	cmd := exec.Command(name, args...)
 	cmd.Env = env
 	fmt.Println("Building binary...")
 	err := cmd.Run()
-	return err, success_message, name
+	return err, success_message
 }

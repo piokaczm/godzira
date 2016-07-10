@@ -9,7 +9,8 @@ import (
 type stubBuilder struct{}
 
 func (builder stubBuilder) execCommand(name string, args []string, env []string) (error, string, string) {
-	return nil, name, strings.Join(args, ":")
+	values := append(name, args...)
+	return nil, strings.Join(values, ":")
 }
 
 func (builder stubBuilder) prepareToCompilation(config *Configuration) (string, []string, []string) {
@@ -20,15 +21,13 @@ func (builder stubBuilder) prepareToCompilation(config *Configuration) (string, 
 func TestBinaryBuilding(t *testing.T) {
 	config := parseConfig([]byte(dataNoStrategy))
 	builder := stubBuilder{}
-	_, command, args := buildBinary(&config, builder)
-	assert.Equal(t, "go", command)
-	assert.Equal(t, "build", args)
+	_, result := buildBinary(&config, builder)
+	assert.Equal(t, "go:build", result)
 }
 
 func TestNamedBinaryBuilding(t *testing.T) {
 	config := parseConfig([]byte(data))
 	builder := stubBuilder{}
-	_, command, args := buildBinary(&config, builder)
-	assert.Equal(t, "go", command)
-	assert.Equal(t, "build:-o:test_name", args)
+	_, result := buildBinary(&config, builder)
+	assert.Equal(t, "go:build:-o:test_name", result)
 }

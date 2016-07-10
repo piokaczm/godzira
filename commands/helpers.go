@@ -58,3 +58,8 @@ func blank(str string) bool {
 	}
 	return false
 }
+
+func deployPrint(server string, str string) {
+	msg := strings.Join([]string{server, str}, ": ")
+	fmt.Println(msg)
+}

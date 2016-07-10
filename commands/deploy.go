@@ -19,8 +19,6 @@ func Deploy(c *cli.Context) {
 	// deploy_env := c.Args()[0] // try to extract it somehow
 
 	// config := getConfig()
-	// servers, err := getServers(config.Environments, deploy_env)
-	// checkErr(err)
 
 	// if config.Godep {
 	// 	e := restoreDependencies()
@@ -34,18 +32,41 @@ func Deploy(c *cli.Context) {
 
 	// builder := Builder{}
 	// deployer := Deployer{}
-	// deployApp(builder, deployer, config, servers, deploy_env)
+	// deployApp(builder, deployer, config, deploy_env)
 }
 
-// func deployApp(builder BinaryBuilder, deployer BinaryDeployer, config Configuration, servers []string, env string) {
-// 	// build binary, check if it succeeded, if so print success message
-// 	err, msg := buildBinary(config.Goarch, config.Goos, builder)
-// 	checkErr(err)
-// 	fmt.Println(msg)
-// 	// possibly just move servers fetching to deployer interface? why inject it here as we need it inside it
-// 	// and config is passed anyway?
-// 	deployer.runDeploy(&config, servers, env)
-// }
+func deployApp(builder BinaryBuilder, deployer BinaryDeployer, config Configuration, env string) {
+	// build binary, check if it succeeded, if so print success message
+	buildErr, buildMsg := buildBinary(config.Goarch, config.Goos, builder)
+	checkErr(buildErr)
+	fmt.Println(buildMsg)
+
+	// deployer should be pretty dumb - don't put there any config-related logic I guess
+	var binary string
+	strategy := config.getStrategy()
+	servers, err := getServers(config.Environments, env)
+	checkErr(err)
+	if blank(config.BinName) {
+		binary := config.BinName
+	} else {
+		binary := getDir()
+	}
+
+	if slackEnabled(config.Slack) {
+		startMsg(config.Slack, env)
+	}
+
+	for _, server := range servers {
+		deployMsg := runDeploy(&config, env, server, binary, deployer)
+		fmt.Println(deployMsg)
+	}
+
+	// asci art
+	fmt.Println(deployed)
+	if slackEnabled(config.Slack) {
+		finishMsg(config.Slack, env)
+	}
+}
 
 // // run all tests before deploy
 // // if one of them fails stop deploying

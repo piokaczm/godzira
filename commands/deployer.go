@@ -13,13 +13,11 @@ package commands
 // 	copyBinary(binary string, path string, strategy string) error
 // 	execCopy(command string, args []string) error
 // 	execRestart(command string, args []string) error
-// 	execCommand(name string, args []string, start_msg string, finish_msg string) error
+// 	execCommand(name string, args []string, start_msg string, finish_msg string) (string, error)
 // }
 
 // // actual deployment
-// func (deployer Deployer) execDeploy(config *Configuration, servers []string, env string) {
-// 	binary := getDir() // that's stupid, compile named file
-
+// func (deployer Deployer) execDeploy(config *Configuration, servers []string, env string, binary string) {
 // 	fmt.Println("Starting deployment!")
 // 	if slackEnabled(config.Slack) {
 // 		startMsg(config.Slack, env)
@@ -41,6 +39,7 @@ package commands
 // }
 
 // // restart binary via ssh
+// // restarter intefrace?
 // func (deployer Deployer) execRestart(server string, command string) error {
 // 	args := append([]string{server}, strings.Split(command, " ")...)
 // 	err := runCommand(

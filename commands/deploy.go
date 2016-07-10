@@ -96,14 +96,9 @@ func Deploy(c *cli.Context) {
 // 	return err
 // }
 
-func execCommand(name string, args []string, start_msg string, finish_msg string) error {
+func execCommand(name string, args []string, start_msg string, finish_msg string) (string, error) {
 	fmt.Println(start_msg)
 
 	err := exec.Command(name, args...).Run()
-	if err != nil {
-		return err
-	} else {
-		fmt.Println(finish_msg)
-		return nil
-	}
+	return finish_msg, err
 }

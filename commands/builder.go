@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 )
 
@@ -11,27 +12,26 @@ const (
 	command_arg     = "build"
 )
 
-// maybe create some wrapper build on interface to return commands?
-// this way it should be easier to test...
-
 type Builder struct{}
 
 type BinaryBuilder interface {
-	buildBinary(goarch string, goos string) error
-	execCommand(name string, args []string, start_msg string, finish_msg string) error
+	prepareToCompilation(goarch string, goos string) (string, []string, []string)
+	execCommand(name string, args []string, env []string) (error, string)
+}
+
+func buildBinary(goarch string, goos string, builder BinaryBuilder) (error, string) {
+	name, args, env := builder.prepareToCompilation(goarch, goos)
+	return builder.execCommand(name, args, env)
 }
 
 // cross-compile binary using provided config
-func (builder Builder) buildBinary(goarch string, goos string) string {
+func (builder Builder) prepareToCompilation(goarch string, goos string) (string, []string, []string) {
 	name := command_name
 	args := []string{command_arg}
 	env := os.Environ()
 	env = append(env, fmt.Sprintf("GOOS=%s", goos))
 	env = append(env, fmt.Sprintf("GOARCH=%s", goarch))
-	message, err := builder.execCommand(name, args, env)
-	checkErr(err)
-	return message
-	// remember to print this msg in deploy.go
+	return name, args, env
 }
 
 func (builder Builder) execCommand(name string, args []string, env []string) (error, string) {

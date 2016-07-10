@@ -38,7 +38,10 @@ func Deploy(c *cli.Context) {
 }
 
 func deployApp(builder BinaryBuilder, deployer BinaryDeployer, config Configuration, servers []string, env string) {
-	builder.buildBinary(config.Goarch, config.Goos)
+	// build binary, check if it succeeded, if so print success message
+	err, msg := buildBinary(config.Goarch, config.Goos, builder)
+	checkErr(err)
+	fmt.Println(msg)
 	// possibly just move servers fetching to deployer interface? why inject it here as we need it inside it
 	// and config is passed anyway?
 	deployer.runDeploy(&config, servers, env)

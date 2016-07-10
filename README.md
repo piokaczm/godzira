@@ -42,6 +42,7 @@ vendor: true # if you're using vendor experiment and want to filter out vendor d
 test: true # only if you want to run all tests before deploy, defaults to false
 godep: true # only if you're using godep and want to run godep restore before building a binary, defaults to false
 strategy: scp # optional
+binary_name: name # optional - if blank the tool will run plain go build
 
 environments:
   staging: # it's [environment] for deploy command, name it as you wish

@@ -88,6 +88,7 @@ func readConfig() []byte {
 }
 
 type Configuration struct {
+	BinName      string                       `yaml:"binary_name"`
 	Strategy     string                       `yaml:"strategy"`
 	Goos         string                       `yaml:"goos"`
 	Goarch       string                       `yaml:"goarch"`

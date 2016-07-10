@@ -3,9 +3,7 @@ package commands
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"strings"
-	"testing"
 )
 
 const (
@@ -54,15 +52,9 @@ func checkErr(e error) {
 	}
 }
 
-func Expect(t *testing.T, a interface{}, b interface{}) {
-	if a != b {
-		t.Errorf("Expected %v (type %v) - Got %v (type %v)", b, reflect.TypeOf(b), a, reflect.TypeOf(a))
+func blank(str string) bool {
+	if len(str) == 0 {
+		return true
 	}
-}
-
-func DeepExpect(t *testing.T, a interface{}, b interface{}) {
-	eq := reflect.DeepEqual(a, b)
-	if eq != true {
-		t.Errorf("Expected %v (type %v) - Got %v (type %v)", b, reflect.TypeOf(b), a, reflect.TypeOf(a))
-	}
+	return false
 }

@@ -6,6 +6,7 @@ goarch: amd64
 test: true
 godep: true
 strategy: scp
+binary_name: 'test_name'
 
 environments:
   staging:

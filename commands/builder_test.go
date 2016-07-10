@@ -9,18 +9,25 @@ import (
 type stubBuilder struct{}
 
 func (builder stubBuilder) execCommand(name string, args []string, env []string) (error, string) {
-	args = append(args, name)
+	args = append([]string{name}, args...)
 	return nil, strings.Join(args, ":")
 }
 
-func (builder stubBuilder) prepareToCompilation(goarch string, goos string) (string, []string, []string) {
+func (builder stubBuilder) prepareToCompilation(config *Configuration) (string, []string, []string) {
 	realBuilder := Builder{}
-	return realBuilder.prepareToCompilation(goarch, goos)
+	return realBuilder.prepareToCompilation(config)
 }
 
 func TestBinaryBuilding(t *testing.T) {
-	goarch, goos := "amd64", "linux"
+	config := parseConfig([]byte(dataNoStrategy))
 	builder := stubBuilder{}
-	_, result := buildBinary(goarch, goos, builder)
-	assert.Equal(t, "build:go", result)
+	_, result := buildBinary(&config, builder)
+	assert.Equal(t, "go:build", result)
+}
+
+func TestNamedBinaryBuilding(t *testing.T) {
+	config := parseConfig([]byte(data))
+	builder := stubBuilder{}
+	_, result := buildBinary(&config, builder)
+	assert.Equal(t, "go:build:-o:test_name", result)
 }

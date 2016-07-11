@@ -55,6 +55,7 @@ func (deployer Deployer) prepareCommand(binary string, path string, strategy str
 	args := make([]string, 0, 3)
 	if strategy == "scp" {
 		command = scp
+		path := strings.Join([]string{path, binary}, "")
 		args = append(args, []string{binary, path}...)
 	} else if strategy == "rsync" {
 		command = rsync

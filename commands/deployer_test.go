@@ -1,7 +1,7 @@
 package commands
 
 import (
-	// "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 )
@@ -20,7 +20,7 @@ func (deployer stubDeployer) prepareCommand(binary string, path string, strategy
 
 func (deployer stubDeployer) execCopy(command string, args []string) (string, error) {
 	values := append([]string{command}, args...)
-	return strings.Join(values, ":"), nil
+	return strings.Join(values, " "), nil
 }
 
 func (deployer stubDeployer) execRestart(server string, command string) error {
@@ -32,5 +32,11 @@ func (deployer stubDeployer) execCommand(name string, args []string, start_msg s
 }
 
 func TestSingleBinaryDeployment(t *testing.T) {
-
+	deployer := stubDeployer{}
+	config := parseConfig([]byte(data))
+	env := "staging"
+	binary := "bin"
+	server := "test@test.pl"
+	msg := runDeploy(&config, server, env, binary, deployer)
+	assert.Equal(t, "scp bin test@test.pl:binaries/bin", msg)
 }

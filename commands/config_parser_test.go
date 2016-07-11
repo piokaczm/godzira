@@ -33,7 +33,8 @@ func TestParseServer(t *testing.T) {
 func TestSetServerWithTwoHosts(t *testing.T) {
 	config := parseConfig([]byte(data))
 	result, _ := getServers(config.Environments, "production")
-	assert.Equal(t, result, []string{"pizdekmaster@real-pizda.net", "pizdekmaster2@real-pizda2.net"})
+	assert.Contains(t, result, "pizdekmaster@real-pizda.net")
+	assert.Contains(t, result, "pizdekmaster2@real-pizda2.net")
 	assert.Equal(t, len(result), 2)
 }
 

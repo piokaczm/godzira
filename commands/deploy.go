@@ -37,19 +37,17 @@ func Deploy(c *cli.Context) {
 
 func deployApp(builder BinaryBuilder, deployer BinaryDeployer, config Configuration, env string) {
 	// build binary, check if it succeeded, if so print success message
-	buildErr, buildMsg := buildBinary(config.Goarch, config.Goos, builder)
+	buildErr, buildMsg := buildBinary(&config, builder)
 	checkErr(buildErr)
 	fmt.Println(buildMsg)
-
-	// deployer should be pretty dumb - don't put there any config-related logic I guess
 	var binary string
-	strategy := config.getStrategy()
+
 	servers, err := getServers(config.Environments, env)
 	checkErr(err)
 	if blank(config.BinName) {
-		binary := config.BinName
+		binary = config.BinName
 	} else {
-		binary := getDir()
+		binary = getDir()
 	}
 
 	if slackEnabled(config.Slack) {

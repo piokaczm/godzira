@@ -1,25 +1,25 @@
 package commands
 
 import (
-	"github.com/stretchr/testify/assert"
+	// "github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 )
 
 type stubDeployer struct{}
 
-func (deployer stubDeployer) preparePath(config *Configuration, env string, server string) (string, error) {
+func (deployer stubDeployer) preparePath(config *Configuration, env string, server string) string {
 	realDeployer := Deployer{}
 	return realDeployer.preparePath(config, env, server)
 }
 
-func (deployer stubDeployer) prepareCommand(binary string, path string, strategy string) (string, []string) {
+func (deployer stubDeployer) prepareCommand(binary string, path string, strategy string) (error, string, []string) {
 	realDeployer := Deployer{}
 	return realDeployer.prepareCommand(binary, path, strategy)
 }
 
 func (deployer stubDeployer) execCopy(command string, args []string) (string, error) {
-	values := append(command, args...)
+	values := append([]string{command}, args...)
 	return strings.Join(values, ":"), nil
 }
 

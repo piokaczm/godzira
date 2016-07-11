@@ -8,8 +8,8 @@ import (
 
 type stubBuilder struct{}
 
-func (builder stubBuilder) execCommand(name string, args []string, env []string) (error, string, string) {
-	values := append(name, args...)
+func (builder stubBuilder) execCommand(name string, args []string, env []string) (error, string) {
+	values := append([]string{name}, args...)
 	return nil, strings.Join(values, ":")
 }
 

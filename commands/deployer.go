@@ -1,8 +1,7 @@
 package commands
 
 import (
-	"fmt"
-	"os/exec"
+	"errors"
 	"strings"
 )
 
@@ -14,21 +13,21 @@ const (
 type Deployer struct{}
 
 type BinaryDeployer interface {
-	preparePath(config *Configuration, env string, server string) (string, error)
-	prepareCommand(binary string, path string, strategy string) (string, []string)
+	preparePath(config *Configuration, env string, server string) string
+	prepareCommand(binary string, path string, strategy string) (error, string, []string)
 	execCopy(command string, args []string) (string, error)
 	execRestart(server string, command string) error
 	execCommand(name string, args []string, start_msg string, finish_msg string) (string, error)
 }
 
 // actual deployment
-func runDeploy(config *Configuration, server string, env string, binary string, deployer BinaryDeployer) {
+func runDeploy(config *Configuration, server string, env string, binary string, deployer BinaryDeployer) string {
 	deployPrint(server, deploy_started_msg)
 
-	path, prepareErr := deployer.preparePath(config, env, server)
-	checkErr(prepareErr)
-
-	command, args := deployer.prepareCommand(binary, path, strategy)
+	path := deployer.preparePath(config, env, server)
+	strategy := config.getStrategy()
+	commandErr, command, args := deployer.prepareCommand(binary, path, strategy)
+	checkErr(commandErr)
 	finishMsg, copyErr := deployer.execCopy(command, args)
 	checkErr(copyErr)
 
@@ -38,11 +37,11 @@ func runDeploy(config *Configuration, server string, env string, binary string, 
 	return finishMsg
 }
 
-func (deployer Deployer) preparePath(config *Configuration, env string, server string) (string, error) {
+func (deployer Deployer) preparePath(config *Configuration, env string, server string) string {
 	return strings.Join([]string{server, config.Environments[env]["path"]}, ":")
 }
 
-func (deployer Deployer) execRestart(server string, command string) error {
+func (deployer Deployer) execRestart(server string, command string) (string, error) {
 	args := append([]string{server}, strings.Split(command, " ")...)
 	return execCommand(
 		"ssh",
@@ -51,7 +50,7 @@ func (deployer Deployer) execRestart(server string, command string) error {
 		"Binary restarted!")
 }
 
-func (deployer Deployer) prepareCommand(binary string, path string, strategy string) (string, []string) {
+func (deployer Deployer) prepareCommand(binary string, path string, strategy string) (error, string, []string) {
 	var command string
 	args := make([]string, 0, 3)
 	if strategy == "scp" {
@@ -61,9 +60,9 @@ func (deployer Deployer) prepareCommand(binary string, path string, strategy str
 		command = rsync
 		args = append(args, []string{rsyncArgs, binary, path}...)
 	} else {
-		return errors.New("Unknown strategy, please select scp or rsync")
+		return errors.New("Unknown strategy, please select scp or rsync"), "", []string{}
 	}
-	return command, args
+	return nil, command, args
 }
 
 func (deployer Deployer) execCopy(command string, args []string) (string, error) {

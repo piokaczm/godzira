@@ -23,8 +23,8 @@ func (deployer stubDeployer) execCopy(command string, args []string) (string, er
 	return strings.Join(values, " "), nil
 }
 
-func (deployer stubDeployer) execRestart(server string, command string) error {
-	return nil
+func (deployer stubDeployer) execRestart(server string, command string) (string, error) {
+	return "", nil
 }
 
 func (deployer stubDeployer) execCommand(name string, args []string, start_msg string, finish_msg string) (string, error) {

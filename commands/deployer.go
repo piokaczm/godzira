@@ -2,6 +2,7 @@ package commands
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -16,7 +17,7 @@ type BinaryDeployer interface {
 	preparePath(config *Configuration, env string, server string) string
 	prepareCommand(binary string, path string, strategy string) (error, string, []string)
 	execCopy(command string, args []string) (string, error)
-	execRestart(server string, command string) error
+	execRestart(server string, command string) (string, error)
 	execCommand(name string, args []string, start_msg string, finish_msg string) (string, error)
 }
 
@@ -31,8 +32,9 @@ func runDeploy(config *Configuration, server string, env string, binary string, 
 	finishMsg, copyErr := deployer.execCopy(command, args)
 	checkErr(copyErr)
 
-	restartErr := deployer.execRestart(server, config.Environments[env]["restart_command"])
+	restartMsg, restartErr := deployer.execRestart(server, config.Environments[env]["restart_command"])
 	checkErr(restartErr)
+	fmt.Println(restartMsg)
 
 	return finishMsg
 }

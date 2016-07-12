@@ -1,12 +1,10 @@
 package commands
 
 import (
-	// "errors"
 	"fmt"
 	"github.com/codegangsta/cli"
-	// "os"
 	"os/exec"
-	// "strings"
+	"strings"
 )
 
 const (
@@ -16,27 +14,27 @@ const (
 )
 
 func Deploy(c *cli.Context) {
-	// deploy_env := c.Args()[0] // try to extract it somehow
+	deploy_env := c.Args()[0] // try to extract it somehow
+	config := getConfig()
 
-	// config := getConfig()
+	if config.Godep {
+		msg, err := restoreDependencies()
+		checkErr(err)
+		fmt.Println(msg)
+	}
 
-	// if config.Godep {
-	// 	e := restoreDependencies()
-	// 	checkErr(e)
-	// }
+	if config.Test {
+		msg, e := runTests(config.Vendor)
+		checkErr(e)
+		fmt.Println(msg)
+	}
 
-	// if config.Test {
-	// 	e := runTests(config.Vendor)
-	// 	checkErr(e)
-	// }
-
-	// builder := Builder{}
-	// deployer := Deployer{}
-	// deployApp(builder, deployer, config, deploy_env)
+	builder := Builder{}
+	deployer := Deployer{}
+	deployApp(builder, deployer, config, deploy_env)
 }
 
 func deployApp(builder BinaryBuilder, deployer BinaryDeployer, config Configuration, env string) {
-	// build binary, check if it succeeded, if so print success message
 	buildErr, buildMsg := buildBinary(&config, builder)
 	checkErr(buildErr)
 	fmt.Println(buildMsg)
@@ -66,54 +64,52 @@ func deployApp(builder BinaryBuilder, deployer BinaryDeployer, config Configurat
 	}
 }
 
-// // run all tests before deploy
-// // if one of them fails stop deploying
-// func runTests(vendor bool) error {
-// 	args := []string{"test", "-v"}
-// 	if vendor {
-// 		dirs, e := filterVendor()
-// 		checkErr(e)
-// 		args = append(args, dirs...)
-// 	} else {
-// 		args = append(args, "./...")
-// 	}
+// run all tests before deploy
+// if one of them fails stop deploying
+func runTests(vendor bool) (string, error) {
+	args := []string{"test", "-v"}
+	if vendor {
+		dirs, e := filterVendor()
+		checkErr(e)
+		args = append(args, dirs...)
+	} else {
+		args = append(args, "./...")
+	}
 
-// 	err := execCommand(
-// 		"go",
-// 		args,
-// 		"Running tests...",
-// 		"Tests passed!")
-// 	return err
-// }
+	return execCommand(
+		"go",
+		args,
+		"Running tests...",
+		"Tests passed!")
+}
 
-// // filter out /vendor dir for tests
-// // if app uses vendor experiment
-// func filterVendor() ([]string, error) {
-// 	list := exec.Command("go", "list", "./...")
-// 	grep := exec.Command("grep", "-v", "/vendor/")
-// 	listOut, _ := list.StdoutPipe()
-// 	list.Start()
-// 	grep.Stdin = listOut
+// filter out /vendor dir for tests
+// if app uses vendor experiment
+func filterVendor() ([]string, error) {
+	list := exec.Command("go", "list", "./...")
+	grep := exec.Command("grep", "-v", "/vendor/")
+	listOut, _ := list.StdoutPipe()
+	list.Start()
+	grep.Stdin = listOut
 
-// 	out, err := grep.Output()
-// 	if err != nil {
-// 		return nil, err
-// 	} else {
-// 		dirs := strings.Split(string(out), "\n")
-// 		dirs = dirs[:len(dirs)-1]
-// 		return dirs, nil
-// 	}
-// }
+	out, err := grep.Output()
+	if err != nil {
+		return nil, err
+	} else {
+		dirs := strings.Split(string(out), "\n")
+		dirs = dirs[:len(dirs)-1]
+		return dirs, nil
+	}
+}
 
-// // restore all dependencies before deploy
-// func restoreDependencies() error {
-// 	err := execCommand(
-// 		"godep",
-// 		[]string{"restore"},
-// 		"Restoring dependencies...",
-// 		"Dependencies restored!")
-// 	return err
-// }
+// restore all dependencies before deploy
+func restoreDependencies() (string, error) {
+	return execCommand(
+		"godep",
+		[]string{"restore"},
+		"Restoring dependencies...",
+		"Dependencies restored!")
+}
 
 func execCommand(name string, args []string, start_msg string, finish_msg string) (string, error) {
 	fmt.Println(start_msg)

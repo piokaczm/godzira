@@ -13,6 +13,7 @@ const (
 	rsyncArgs = "-chavzP"
 )
 
+// Deploy is a wrapper for whole deply process.
 func Deploy(c *cli.Context) {
 	deploy_env := c.Args()[0] // try to extract it somehow
 	config := getConfig()
@@ -34,6 +35,8 @@ func Deploy(c *cli.Context) {
 	deployApp(builder, deployer, config, deploy_env)
 }
 
+// deployApp is a function which builds a binary using provided builder and then iterates over
+// servers and deploys it to them.
 func deployApp(builder BinaryBuilder, deployer BinaryDeployer, config Configuration, env string) {
 	buildErr, buildMsg := buildBinary(&config, builder)
 	checkErr(buildErr)
@@ -64,8 +67,8 @@ func deployApp(builder BinaryBuilder, deployer BinaryDeployer, config Configurat
 	}
 }
 
-// run all tests before deploy
-// if one of them fails stop deploying
+// runTests runs all availabele tests.
+// If one of them fails, deploy stops.
 func runTests(vendor bool) (string, error) {
 	args := []string{"test", "-v"}
 	if vendor {
@@ -83,8 +86,7 @@ func runTests(vendor bool) (string, error) {
 		"Tests passed!")
 }
 
-// filter out /vendor dir for tests
-// if app uses vendor experiment
+// filterVendor filters vendor directory for tests.
 func filterVendor() ([]string, error) {
 	list := exec.Command("go", "list", "./...")
 	grep := exec.Command("grep", "-v", "/vendor/")
@@ -102,7 +104,8 @@ func filterVendor() ([]string, error) {
 	}
 }
 
-// restore all dependencies before deploy
+// restoreDependencies restores all dependencies using godep.
+// Probably it should be removed.
 func restoreDependencies() (string, error) {
 	return execCommand(
 		"godep",
@@ -111,6 +114,8 @@ func restoreDependencies() (string, error) {
 		"Dependencies restored!")
 }
 
+// execCommand is a wrapper for running shell commands.
+// It returns last provided message for testing purposes (no better ide atm).
 func execCommand(name string, args []string, start_msg string, finish_msg string) (string, error) {
 	fmt.Println(start_msg)
 

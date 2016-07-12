@@ -59,6 +59,13 @@ func blank(str string) bool {
 	return false
 }
 
+func notBlank(str string) bool {
+	if len(str) == 0 {
+		return false
+	}
+	return true
+}
+
 func deployPrint(server string, str string) {
 	msg := strings.Join([]string{server, str}, ": ")
 	fmt.Println(msg)

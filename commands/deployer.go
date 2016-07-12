@@ -32,9 +32,11 @@ func runDeploy(config *Configuration, server string, env string, binary string, 
 	finishMsg, copyErr := deployer.execCopy(command, args)
 	checkErr(copyErr)
 
-	restartMsg, restartErr := deployer.execRestart(server, config.Environments[env]["restart_command"])
-	checkErr(restartErr)
-	fmt.Println(restartMsg)
+	if notBlank(config.Environments[env]["restart_command"]) {
+		restartMsg, restartErr := deployer.execRestart(server, config.Environments[env]["restart_command"])
+		checkErr(restartErr)
+		fmt.Println(restartMsg)
+	}
 
 	return finishMsg
 }

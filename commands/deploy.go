@@ -42,7 +42,7 @@ func deployApp(builder BinaryBuilder, deployer BinaryDeployer, config Configurat
 
 	servers, err := getServers(config.Environments, env)
 	checkErr(err)
-	if blank(config.BinName) {
+	if notBlank(config.BinName) {
 		binary = config.BinName
 	} else {
 		binary = getDir()
@@ -53,7 +53,7 @@ func deployApp(builder BinaryBuilder, deployer BinaryDeployer, config Configurat
 	}
 
 	for _, server := range servers {
-		deployMsg := runDeploy(&config, env, server, binary, deployer)
+		deployMsg := runDeploy(&config, server, env, binary, deployer)
 		fmt.Println(deployMsg)
 	}
 

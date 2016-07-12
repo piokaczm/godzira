@@ -1,5 +1,7 @@
-#GoDeploy
-[![Build Status](https://travis-ci.org/piokaczm/godeploy.svg?branch=master)](https://travis-ci.org/piokaczm/godeploy)
+#Godzira
+
+##Smash your apps to servers just like Godzira would smash a city!
+[![Build Status](https://travis-ci.org/piokaczm/godzira.svg?branch=master)](https://travis-ci.org/piokaczm/godzira)
 
 Simple deploy tool:
 - build a binary using cross-compilation
@@ -10,7 +12,7 @@ Simple deploy tool:
 ###Installation
 
 ```
-go get github.com/piokaczm/godeploy
+go get github.com/piokaczm/godzira
 ```
 
 ###Usage
@@ -18,7 +20,7 @@ go get github.com/piokaczm/godeploy
 In your app directory run
 
 ```
-godeploy init
+godzira init
 ```
 
 It creates config directory with empty `deploy.yml` config file.
@@ -26,7 +28,7 @@ It creates config directory with empty `deploy.yml` config file.
 After setting it up just run
 
 ```
-godeploy deploy [environment]
+godzira deploy [environment]
 ```
 
 Depending on your config it restores dependencies, runs tests, builds binary, copies it over to your server(s) and sends notification to your Slack.
@@ -51,7 +53,7 @@ environments:
     path: binaries/
     restart_command: etc/init.d/daemon restart
   production:
-    host_1: anotherexample.net # godeploy matches host and user using the provided digit, so make sure to fill it properly
+    host_1: anotherexample.net # Godzira matches host and user using the provided digit, so make sure to fill it properly
     user_1: user_1
     host_2: anotherexample2.net
     user_2: user_2
@@ -65,5 +67,5 @@ slack: # optional
 
 ###Strategy
 
-Godeploy provides two deploy strategies: `scp` and `rsync`.
+Godzira provides two deploy strategies: `scp` and `rsync`.
 You can choose which one to use in your config file. If no strategy specified, the tool will use `rsync`.

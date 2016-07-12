@@ -3,9 +3,7 @@ package commands
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"strings"
-	"testing"
 )
 
 const (
@@ -41,7 +39,9 @@ func slackEnabled(slack map[string]string) bool {
 
 func checkErrWithMsg(e error, slackConfig map[string]string) {
 	if e != nil {
-		errorMsg(slackConfig)
+		if slackEnabled(slackConfig) {
+			errorMsg(slackConfig)
+		}
 		panic(e)
 	}
 }
@@ -52,15 +52,21 @@ func checkErr(e error) {
 	}
 }
 
-func Expect(t *testing.T, a interface{}, b interface{}) {
-	if a != b {
-		t.Errorf("Expected %v (type %v) - Got %v (type %v)", b, reflect.TypeOf(b), a, reflect.TypeOf(a))
+func blank(str string) bool {
+	if len(str) == 0 {
+		return true
 	}
+	return false
 }
 
-func DeepExpect(t *testing.T, a interface{}, b interface{}) {
-	eq := reflect.DeepEqual(a, b)
-	if eq != true {
-		t.Errorf("Expected %v (type %v) - Got %v (type %v)", b, reflect.TypeOf(b), a, reflect.TypeOf(a))
+func notBlank(str string) bool {
+	if len(str) == 0 {
+		return false
 	}
+	return true
+}
+
+func deployPrint(server string, str string) {
+	msg := strings.Join([]string{server, str}, ": ")
+	fmt.Println(msg)
 }

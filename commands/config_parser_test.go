@@ -5,57 +5,6 @@ import (
 	"testing"
 )
 
-var data = `
-goos: linux
-goarch: amd64
-test: true
-godep: true
-strategy: scp
-
-environments:
-  staging:
-    host: pizda.net
-    user: pizdek
-    path: binaries/
-    restart_command: etc/dupa/daemon restart
-  production:
-    host_1: real-pizda.net
-    user_1: pizdekmaster
-    host_2: real-pizda2.net
-    user_2: pizdekmaster2
-    path: current/binaries/
-    restart_command: etc/prod/dupa/daemon restart
-
-slack:
-  webhook: https://hooks.slack.com/services/sth/more
-  appname: AppName
-`
-
-var dataNoStrategy = `
-goos: linux
-goarch: amd64
-test: true
-godep: true
-
-environments:
-  staging:
-    host: pizda.net
-    user: pizdek
-    path: binaries/
-    restart_command: etc/dupa/daemon restart
-  production:
-    host_1: real-pizda.net
-    user_1: pizdekmaster
-    host_2: real-pizda2.net
-    user_2: pizdekmaster2
-    path: current/binaries/
-    restart_command: etc/prod/dupa/daemon restart
-
-slack:
-  webhook: https://hooks.slack.com/services/sth/more
-  appname: AppName
-`
-
 func TestParsing(t *testing.T) {
 	result := parseConfig([]byte(data))
 	assert.Equal(t, result.Goos, "linux")
@@ -84,7 +33,8 @@ func TestParseServer(t *testing.T) {
 func TestSetServerWithTwoHosts(t *testing.T) {
 	config := parseConfig([]byte(data))
 	result, _ := getServers(config.Environments, "production")
-	assert.Equal(t, result, []string{"pizdekmaster@real-pizda.net", "pizdekmaster2@real-pizda2.net"})
+	assert.Contains(t, result, "pizdekmaster@real-pizda.net")
+	assert.Contains(t, result, "pizdekmaster2@real-pizda2.net")
 	assert.Equal(t, len(result), 2)
 }
 

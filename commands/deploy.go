@@ -1,10 +1,8 @@
 package commands
 
 import (
-	"errors"
 	"fmt"
 	"github.com/codegangsta/cli"
-	"os"
 	"os/exec"
 	"strings"
 )
@@ -17,109 +15,58 @@ const (
 
 func Deploy(c *cli.Context) {
 	deploy_env := c.Args()[0] // try to extract it somehow
-
 	config := getConfig()
-	servers, err := getServers(config.Environments, deploy_env)
-	checkErr(err)
 
 	if config.Godep {
-		e := restoreDependencies()
-		checkErr(e)
+		msg, err := restoreDependencies()
+		checkErr(err)
+		fmt.Println(msg)
 	}
 
 	if config.Test {
-		e := runTests(config.Vendor)
+		msg, e := runTests(config.Vendor)
 		checkErr(e)
+		fmt.Println(msg)
 	}
 
-	buildBinary(config.Goarch, config.Goos)
-	runDeploy(&config, servers, deploy_env)
+	builder := Builder{}
+	deployer := Deployer{}
+	deployApp(builder, deployer, config, deploy_env)
 }
 
-// cross-compile binary using provided config
-func buildBinary(goarch string, goos string) {
-	// try to rewrite runCommand so there is not so much duplication
-	name := "go"
-	args := []string{"build"}
-	env := os.Environ()
-	env = append(env, fmt.Sprintf("GOOS=%s", goos))
-	env = append(env, fmt.Sprintf("GOARCH=%s", goarch))
+func deployApp(builder BinaryBuilder, deployer BinaryDeployer, config Configuration, env string) {
+	buildErr, buildMsg := buildBinary(&config, builder)
+	checkErr(buildErr)
+	fmt.Println(buildMsg)
+	var binary string
 
-	cmd := exec.Command(name, args...)
-	cmd.Env = env
-	fmt.Println("Building binary...")
-	err := cmd.Run()
-	if err != nil {
-		checkErr(err)
+	servers, err := getServers(config.Environments, env)
+	checkErr(err)
+	if notBlank(config.BinName) {
+		binary = config.BinName
 	} else {
-		fmt.Println("Build succeeded!")
+		binary = getDir()
 	}
-}
 
-// actual deployment
-func runDeploy(config *Configuration, servers []string, env string) {
-	binary := getDir() // that's stupid, compile named file
-
-	fmt.Println("Starting deployment!")
 	if slackEnabled(config.Slack) {
 		startMsg(config.Slack, env)
 	}
-	strategy := config.getStrategy()
 
-	for _, value := range servers {
-		path := strings.Join([]string{value, config.Environments[env]["path"]}, ":")
-		err := copyBinary(binary, path, strategy)
-		checkErrWithMsg(err, config.Slack)
-		e := runRestart(value, config.Environments[env]["restart_command"])
-		checkErr(e)
+	for _, server := range servers {
+		deployMsg := runDeploy(&config, server, env, binary, deployer)
+		fmt.Println(deployMsg)
 	}
 
+	// asci art
 	fmt.Println(deployed)
 	if slackEnabled(config.Slack) {
 		finishMsg(config.Slack, env)
 	}
 }
 
-// restart binary via ssh
-func runRestart(server string, command string) error {
-	args := append([]string{server}, strings.Split(command, " ")...)
-	err := runCommand(
-		"ssh",
-		args,
-		"Restarting binary...",
-		"Binary restarted!")
-	return err
-}
-
-// rsync binary to server(s) listed in the config file
-func copyBinary(binary string, path string, strategy string) error {
-	var command string
-	args := make([]string, 0, 3)
-	if strategy == "scp" {
-		command = scp
-		args = append(args, []string{binary, path}...)
-	} else if strategy == "rsync" {
-		command = rsync
-		args = append(args, []string{rsyncArgs, binary, path}...)
-	} else {
-		return errors.New("Unknown strategy, please select scp or rsync")
-	}
-	err := runCopy(command, args)
-	return err
-}
-
-func runCopy(command string, args []string) error {
-	err := runCommand(
-		command,
-		args,
-		"Deploying...",
-		"Deploy succeeded!")
-	return err
-}
-
 // run all tests before deploy
 // if one of them fails stop deploying
-func runTests(vendor bool) error {
+func runTests(vendor bool) (string, error) {
 	args := []string{"test", "-v"}
 	if vendor {
 		dirs, e := filterVendor()
@@ -129,12 +76,11 @@ func runTests(vendor bool) error {
 		args = append(args, "./...")
 	}
 
-	err := runCommand(
+	return execCommand(
 		"go",
 		args,
 		"Running tests...",
 		"Tests passed!")
-	return err
 }
 
 // filter out /vendor dir for tests
@@ -157,23 +103,17 @@ func filterVendor() ([]string, error) {
 }
 
 // restore all dependencies before deploy
-func restoreDependencies() error {
-	err := runCommand(
+func restoreDependencies() (string, error) {
+	return execCommand(
 		"godep",
 		[]string{"restore"},
 		"Restoring dependencies...",
 		"Dependencies restored!")
-	return err
 }
 
-func runCommand(name string, args []string, start_msg string, finish_msg string) error {
+func execCommand(name string, args []string, start_msg string, finish_msg string) (string, error) {
 	fmt.Println(start_msg)
 
 	err := exec.Command(name, args...).Run()
-	if err != nil {
-		return err
-	} else {
-		fmt.Println(finish_msg)
-		return nil
-	}
+	return finish_msg, err
 }

@@ -1,4 +1,4 @@
-###12.07.2016 v1.0.3
+###03.08.2016 v1.0.3
 
 - Print command output if error occured
 - Always send slack notification if error occured during deployment

@@ -18,17 +18,17 @@ func (deployer stubDeployer) prepareCommand(binary string, path string, strategy
 	return realDeployer.prepareCommand(binary, path, strategy)
 }
 
-func (deployer stubDeployer) execCopy(command string, args []string) (string, error) {
+func (deployer stubDeployer) execCopy(command string, args []string) ([]byte, string, error) {
 	values := append([]string{command}, args...)
-	return strings.Join(values, " "), nil
+	return []byte{}, strings.Join(values, " "), nil
 }
 
-func (deployer stubDeployer) execRestart(server string, command string) (string, error) {
-	return "", nil
+func (deployer stubDeployer) execRestart(server string, command string) ([]byte, string, error) {
+	return []byte{}, "", nil
 }
 
-func (deployer stubDeployer) execCommand(name string, args []string, start_msg string, finish_msg string) (string, error) {
-	return "", nil
+func (deployer stubDeployer) execCommand(name string, args []string, start_msg string, finish_msg string) ([]byte, string, error) {
+	return []byte{}, "", nil
 }
 
 func TestSingleBinaryDeployment(t *testing.T) {

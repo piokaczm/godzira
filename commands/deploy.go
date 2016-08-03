@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"github.com/codegangsta/cli"
+	"github.com/fatih/color"
 	"os/exec"
 	"strings"
 )
@@ -15,19 +16,22 @@ const (
 
 // Deploy is a wrapper for whole deply process.
 func Deploy(c *cli.Context) {
+	color.Set(color.FgYellow)
+	green := color.New(color.FgGreen, color.Bold)
+
 	deploy_env := c.Args()[0] // try to extract it somehow
 	config := getConfig()
 
 	if config.Godep {
-		msg, err := restoreDependencies()
+		_, msg, err := restoreDependencies()
 		checkErr(err)
-		fmt.Println(msg)
+		green.Println(msg)
 	}
 
 	if config.Test {
-		msg, e := runTests(config.Vendor)
+		_, msg, e := runTests(config.Vendor)
 		checkErr(e)
-		fmt.Println(msg)
+		green.Println(msg)
 	}
 
 	builder := Builder{}
@@ -38,9 +42,10 @@ func Deploy(c *cli.Context) {
 // deployApp is a function which builds a binary using provided builder and then iterates over
 // servers and deploys it to them.
 func deployApp(builder BinaryBuilder, deployer BinaryDeployer, config Configuration, env string) {
+	green := color.New(color.FgGreen, color.Bold)
 	buildErr, buildMsg := buildBinary(&config, builder)
 	checkErr(buildErr)
-	fmt.Println(buildMsg)
+	green.Println(buildMsg)
 	var binary string
 
 	servers, err := getServers(config.Environments, env)
@@ -57,7 +62,7 @@ func deployApp(builder BinaryBuilder, deployer BinaryDeployer, config Configurat
 
 	for _, server := range servers {
 		deployMsg := runDeploy(&config, server, env, binary, deployer)
-		fmt.Println(deployMsg)
+		green.Println(deployMsg)
 	}
 
 	// asci art
@@ -69,7 +74,7 @@ func deployApp(builder BinaryBuilder, deployer BinaryDeployer, config Configurat
 
 // runTests runs all availabele tests.
 // If one of them fails, deploy stops.
-func runTests(vendor bool) (string, error) {
+func runTests(vendor bool) ([]byte, string, error) {
 	args := []string{"test", "-v"}
 	if vendor {
 		dirs, e := filterVendor()
@@ -106,7 +111,7 @@ func filterVendor() ([]string, error) {
 
 // restoreDependencies restores all dependencies using godep.
 // Probably it should be removed.
-func restoreDependencies() (string, error) {
+func restoreDependencies() ([]byte, string, error) {
 	return execCommand(
 		"godep",
 		[]string{"restore"},
@@ -116,9 +121,9 @@ func restoreDependencies() (string, error) {
 
 // execCommand is a wrapper for running shell commands.
 // It returns last provided message for testing purposes (no better ide atm).
-func execCommand(name string, args []string, start_msg string, finish_msg string) (string, error) {
-	fmt.Println(start_msg)
+func execCommand(name string, args []string, start_msg string, finish_msg string) ([]byte, string, error) {
+	color.Yellow(start_msg)
 
-	err := exec.Command(name, args...).Run()
-	return finish_msg, err
+	output, err := exec.Command(name, args...).Output()
+	return output, finish_msg, err
 }

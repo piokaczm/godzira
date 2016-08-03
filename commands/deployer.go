@@ -22,9 +22,9 @@ type Deployer struct{}
 type BinaryDeployer interface {
 	preparePath(config *Configuration, env string, server string) string
 	prepareCommand(binary string, path string, strategy string) (error, string, []string)
-	execCopy(command string, args []string) (string, error)
-	execRestart(server string, command string) (string, error)
-	execCommand(name string, args []string, start_msg string, finish_msg string) (string, error)
+	execCopy(command string, args []string) ([]byte, string, error)
+	execRestart(server string, command string) ([]byte, string, error)
+	execCommand(name string, args []string, start_msg string, finish_msg string) ([]byte, string, error)
 }
 
 // runDeploy runs all commands related to deployment.
@@ -36,12 +36,12 @@ func runDeploy(config *Configuration, server string, env string, binary string, 
 	strategy := config.getStrategy()
 	commandErr, command, args := deployer.prepareCommand(binary, path, strategy)
 	checkErr(commandErr)
-	finishMsg, copyErr := deployer.execCopy(command, args)
-	checkErr(copyErr)
+	copyOutput, finishMsg, copyErr := deployer.execCopy(command, args)
+	checkCommandError(copyErr, config.Slack, copyOutput)
 
 	if notBlank(config.Environments[env]["restart_command"]) {
-		restartMsg, restartErr := deployer.execRestart(server, config.Environments[env]["restart_command"])
-		checkErr(restartErr)
+		restartOutput, restartMsg, restartErr := deployer.execRestart(server, config.Environments[env]["restart_command"])
+		checkCommandError(restartErr, config.Slack, restartOutput)
 		fmt.Println(restartMsg)
 	}
 
@@ -54,7 +54,7 @@ func (deployer Deployer) preparePath(config *Configuration, env string, server s
 }
 
 // execRestart runs command provided in cofig to restart the binary.
-func (deployer Deployer) execRestart(server string, command string) (string, error) {
+func (deployer Deployer) execRestart(server string, command string) ([]byte, string, error) {
 	args := append([]string{server}, strings.Split(command, " ")...)
 	return execCommand(
 		"ssh",
@@ -82,7 +82,7 @@ func (deployer Deployer) prepareCommand(binary string, path string, strategy str
 }
 
 // execCopy is a wrapper fo executing deploy command.
-func (deployer Deployer) execCopy(command string, args []string) (string, error) {
+func (deployer Deployer) execCopy(command string, args []string) ([]byte, string, error) {
 	return execCommand(
 		command,
 		args,
@@ -92,6 +92,6 @@ func (deployer Deployer) execCopy(command string, args []string) (string, error)
 
 // execCommand passes arguments to generic execCommand.
 // It's here for interface pusposes.
-func (deployer Deployer) execCommand(name string, args []string, start_msg string, finish_msg string) (string, error) {
+func (deployer Deployer) execCommand(name string, args []string, start_msg string, finish_msg string) ([]byte, string, error) {
 	return execCommand(name, args, start_msg, finish_msg)
 }

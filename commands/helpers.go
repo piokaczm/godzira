@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"os"
 	"strings"
 )
@@ -46,6 +47,17 @@ func checkErrWithMsg(e error, slackConfig map[string]string) {
 	}
 }
 
+func checkCommandError(e error, slackConfig map[string]string, output []byte) {
+	if e != nil {
+		if slackEnabled(slackConfig) {
+			errorMsg(slackConfig)
+		}
+		boldRed := color.New(color.FgRed, color.Bold)
+		boldRed.Println(string(output))
+		panic(e)
+	}
+}
+
 func checkErr(e error) {
 	if e != nil {
 		panic(e)
@@ -68,5 +80,5 @@ func notBlank(str string) bool {
 
 func deployPrint(server string, str string) {
 	msg := strings.Join([]string{server, str}, ": ")
-	fmt.Println(msg)
+	color.Cyan("\n%s", msg)
 }

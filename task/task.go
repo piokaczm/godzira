@@ -32,7 +32,7 @@ func (t *Task) exec() {
 }
 
 func (t *Task) runCommand() {
-	output, err := exec.Command(t.Command, t.Args).Output()
+	output, err := exec.Command(t.Command, t.Args...).Output()
 	if err != nil {
 		red := color.New(color.FgRed, color.Bold)
 		red.Println(output)
@@ -48,4 +48,14 @@ func (t *Task) printStart() {
 func (t *Task) printEnd() {
 	green := color.New(color.FgGreen, color.Bold)
 	green.Println(t.EndMessage)
+}
+
+func startMessage(name string) string {
+	// not implemented yet, think of copy
+	return ""
+}
+
+func endMessage(name string) string {
+	// not implemented yet, think of copy
+	return ""
 }

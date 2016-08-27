@@ -1,0 +1,20 @@
+mode: basic
+goos: linux
+goarch: amd64
+test: true
+vendor: true
+binary_name: basicApp
+
+environments:
+  staging:
+    hosts: stg.net
+    user: stg
+    path: stg/
+    restart_command: stg restart
+  production:
+    hosts:
+     - prod1.net
+     - prod2.net
+    user: prod_user
+    path: prod/
+    restart_command: prod restart

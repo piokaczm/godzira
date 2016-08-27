@@ -1,19 +1,28 @@
 package main
 
 import (
+	"errors"
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"os"
+)
+
+const (
+	rsync = "rsync"
+	scp   = "scp"
 )
 
 type Config struct {
-	Mode         string                       `yaml:"mode"`
-	Name         string                       `yaml:"binary_name"`
-	Strategy     string                       `yaml:"strategy"`
-	Goos         string                       `yaml:"goos"`
-	Goarch       string                       `yaml:"goarch"`
-	Environments map[string]map[string]string `yaml:"environments"`
-	Slack        map[string]string            `yaml:"slack"`
-	Test         bool                         `yaml:"test"`
-	Vendor       bool                         `yaml:"vendor"`
+	Mode         string                         `yaml:"mode"`
+	Name         string                         `yaml:"binary_name"`
+	Strategy     string                         `yaml:"strategy"`
+	Goos         string                         `yaml:"goos"`
+	Goarch       string                         `yaml:"goarch"`
+	Environments map[string]map[string][]string `yaml:"environments"`
+	Slack        map[string]string              `yaml:"slack"`
+	Test         bool                           `yaml:"test"`
+	Vendor       bool                           `yaml:"vendor"`
+	CurrentEnv   string
 }
 
 type Environment struct {
@@ -22,54 +31,47 @@ type Environment struct {
 	Name  string
 }
 
-func (c *Config) load() (*Slack, []*Task) {
+// load yml with config, prepare tasks and slack config based on it
+func loadConfig(path string, currentEnv string) (*Config, *Slack, *Environment, []*Task) {
+	currentUser := os.Getenv("USER")
+	c := Config{CurrentEnv: currentEnv}
 	// load yml
-	data, err := ioutil.ReadFile("./config/deploy.yml") // maybe use abs here
+	data, err := ioutil.ReadFile(path) // maybe use abs here
 	checkErr(err)
-	err = yaml.Unmarshal([]byte(data), c)
+	err = yaml.Unmarshal([]byte(data), &c)
 	checkErr(err)
-
+	// check strategy
+	c.chooseStrategy()
 	// prepare slack config
-	slack := Slack{}
-
-	// parse envs
+	slack := loadSlack(&c, currentUser)
+	// prepare env
+	env := loadEnv(&c, currentUser)
 	// prepare tasks
+	return &c, slack, env, []*Task{}
 }
 
-// create map of servers to deploy to
-// { server_1: cos@cos.net, server_2: cos2@cos2.net }
-func getServers(environments map[string]map[string]string, env string) ([]string, error) {
-	// maybe store user@host already in the struct? separate user and host are not really used right now
-	servers := []string{}
-	for key, value := range environments[env] {
-
-		pattern := regexp.MustCompile("^(host)(_\\d+)?$")
-		if pattern.MatchString(key) {
-			// if key == 'host' or 'host_[digit]'
-			digit := regexp.MustCompile("\\d+")
-			match := digit.FindStringSubmatch(key)
-			multiple_hosts := len(match) != 0
-
-			if multiple_hosts {
-				// if more than one host
-				host_number := match[0]
-				user_number := []string{"user_", host_number}
-				user := strings.Join(user_number, "")
-				user = environments[env][user]
-
-				servers = append(servers, parseServer(user, value))
-			} else {
-				// if only one host
-				user := environments[env]["user"]
-				servers = append(servers, parseServer(user, value))
-			}
-		}
+// return pointer to Environment struct with current env variables
+func loadEnv(c *Config, currentUser string) *Environment {
+	return &Environment{
+		Hosts: c.getHosts(),
+		User:  currentUser,
+		Name:  c.CurrentEnv,
 	}
+}
 
-	// if no proper key found return error
-	if len(servers) == 0 {
-		return nil, errors.New("no proper host in config file!")
-	} else {
-		return servers, nil
+// retrieve hosts from config, panic if no hosts found.
+func (c *Config) getHosts() []string {
+	hosts := c.Environments[c.CurrentEnv]["hosts"]
+	if len(hosts) == 0 {
+		err := errors.New("No hosts found in config file!")
+		panic(err)
+	}
+	return hosts
+}
+
+// if no strategy specified fallback to rsync
+func (c *Config) chooseStrategy() {
+	if blank(c.Strategy) {
+		c.Strategy = rsync
 	}
 }

@@ -61,8 +61,12 @@ environments:
     restart_command: etc/init.d/daemon restart
 
 slack: # optional
-  webhook: https://hooks.slack.com/services/xxx/xxx # no more custom settings for now, please select emoji, name etc. via Slack
+  token: slack token
+  channel: bot_checks
   appname: AppName
+  start_emoji: rocket
+  finish_emoji: heart
+  error_emoji: troll
 ```
 
 ###Strategy

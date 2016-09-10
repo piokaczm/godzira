@@ -32,6 +32,12 @@
 			"revisionTime": "2015-12-11T00:06:21Z"
 		},
 		{
+			"checksumSHA1": "9B8PYZt3S5mTdwYNH656T5l7iew=",
+			"path": "github.com/nlopes/slack",
+			"revision": "a8ceb9de0aca0376b293f159bbfb8a6aac72fade",
+			"revisionTime": "2016-09-08T09:33:57Z"
+		},
+		{
 			"checksumSHA1": "zKKp5SZ3d3ycKe4EKMNT0BqAWBw=",
 			"origin": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
 			"path": "github.com/pmezard/go-difflib/difflib",
@@ -43,6 +49,12 @@
 			"path": "github.com/stretchr/testify/assert",
 			"revision": "d77da356e56a7428ad25149ca77381849a6a5232",
 			"revisionTime": "2016-06-15T09:26:46Z"
+		},
+		{
+			"checksumSHA1": "likOl7O0BJntqagR050kkOBuY4o=",
+			"path": "golang.org/x/net/websocket",
+			"revision": "cfe3c2a7525b50c3d707256e371c90938cfef98a",
+			"revisionTime": "2016-09-03T02:20:35Z"
 		}
 	],
 	"rootPath": "github.com/piokaczm/godzira"

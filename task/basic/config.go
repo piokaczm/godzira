@@ -1,7 +1,8 @@
-package main
+package basic
 
 import (
 	"errors"
+	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -13,15 +14,15 @@ const (
 )
 
 type Config struct {
-	Mode         string                         `yaml:"mode"`
-	Name         string                         `yaml:"binary_name"`
-	Strategy     string                         `yaml:"strategy"`
-	Goos         string                         `yaml:"goos"`
-	Goarch       string                         `yaml:"goarch"`
-	Environments map[string]map[string][]string `yaml:"environments"`
-	Slack        map[string]string              `yaml:"slack"`
-	Test         bool                           `yaml:"test"`
-	Vendor       bool                           `yaml:"vendor"`
+	Mode         string                 `yaml:"mode"`
+	Name         string                 `yaml:"binary_name"`
+	Strategy     string                 `yaml:"strategy"`
+	Goos         string                 `yaml:"goos"`
+	Goarch       string                 `yaml:"goarch"`
+	Test         bool                   `yaml:"test"`
+	Vendor       bool                   `yaml:"vendor"`
+	Environments map[string]Environment `yaml:"environments"`
+	Slack        Slack                  `yaml:"slack"`
 	CurrentEnv   string
 }
 
@@ -51,11 +52,18 @@ func loadConfig(path string, currentEnv string) (*Config, *Slack, *Environment, 
 }
 
 // return pointer to Environment struct with current env variables
-func loadEnv(c *Config, currentUser string) *Environment {
+func (config *Config) loadEnv(currentUser string) *Environment {
 	return &Environment{
 		Hosts: c.getHosts(),
 		User:  currentUser,
 		Name:  c.CurrentEnv,
+	}
+}
+
+func (config *Config) loadSlack(currentUser string) *Slack {
+	return &config.Slack{
+		User: currentUser,
+		Env:  config.CurrentEnv,
 	}
 }
 

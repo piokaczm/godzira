@@ -4,6 +4,7 @@ goarch: amd64
 test: true
 vendor: true
 binary_name: basicApp
+strategy: scp
 
 environments:
   staging:

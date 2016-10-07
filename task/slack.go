@@ -12,23 +12,12 @@ const (
 )
 
 type Slack struct {
-	Webhook string
-	AppName string
-	BotName string
-	Emoji   string
+	Webhook string `yaml:"webhook"`
+	AppName string `yaml:"name"`
+	BotName string `yaml:"botname"`
+	Emoji   string `yaml:"emoji"`
 	User    string
 	Env     string
-}
-
-func loadSlack(config *Config, currentUser string) *Slack {
-	return &Slack{
-		Webhook: config.Slack["webhook"],
-		AppName: config.Slack["appName"],
-		BotName: config.Slack["botName"],
-		Emoji:   config.Slack["emoji"],
-		User:    currentUser,
-		Env:     config.CurrentEnv,
-	}
 }
 
 func (s *Slack) start() {

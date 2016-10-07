@@ -37,10 +37,8 @@ func (config *Configuration) getStrategy() string {
 	return config.Strategy
 }
 
-// create map of servers to deploy to
-// { server_1: cos@cos.net, server_2: cos2@cos2.net }
+// create map of servers to deploy to for each environment
 func getServers(environments map[string]map[string]string, env string) ([]string, error) {
-	// maybe store user@host already in the struct? separate user and host are not really used right now
 	servers := []string{}
 	for key, value := range environments[env] {
 

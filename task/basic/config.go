@@ -3,6 +3,7 @@ package basic
 import (
 	"errors"
 	"fmt"
+	"github.com/fatih/color"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -34,25 +35,29 @@ type Environment struct {
 
 // load yml with config, prepare tasks and slack config based on it
 func loadConfig(path string, currentEnv string) (*Config, *Slack, *Environment, []*Task) {
+	boldRed := color.New(color.FgRed, color.Bold)
+
 	currentUser := os.Getenv("USER")
 	c := Config{CurrentEnv: currentEnv}
+
 	// load yml
 	data, err := ioutil.ReadFile(path) // maybe use abs here
 	checkErr(err)
 	err = yaml.Unmarshal([]byte(data), &c)
-	checkErr(err)
-	// check strategy
+	if err != nil {
+		boldRed.Println("Unmarshalling configuration file failed!")
+		panic(err)
+	}
+
 	c.chooseStrategy()
-	// prepare slack config
-	slack := loadSlack(&c, currentUser)
-	// prepare env
-	env := loadEnv(&c, currentUser)
+	slack := c.loadSlack(currentUser)
+	env := c.loadEnvironment(currentUser)
 	// prepare tasks
 	return &c, slack, env, []*Task{}
 }
 
 // return pointer to Environment struct with current env variables
-func (config *Config) loadEnv(currentUser string) *Environment {
+func (config Config) loadEnv(currentUser string) *Environment {
 	return &Environment{
 		Hosts: c.getHosts(),
 		User:  currentUser,
@@ -60,9 +65,9 @@ func (config *Config) loadEnv(currentUser string) *Environment {
 	}
 }
 
-func (config *Config) loadSlack(currentUser string) *Slack {
+func (config Config) loadSlack(currentUser string) *Slack {
 	return &config.Slack{
-		User: currentUser,
+		User: config.currentUser,
 		Env:  config.CurrentEnv,
 	}
 }

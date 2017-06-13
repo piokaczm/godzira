@@ -1,30 +1,35 @@
 package task
 
+import (
+	"fmt"
+
+	"github.com/fatih/color"
+)
+
 type Queue struct {
 	preTasks    []*Task
 	deployTasks []*Task
 	postTasks   []*Task
 }
 
+// Exec executes pre-tasks, deployment and post-tasks queues
 func (q *Queue) Exec() {
-	if queueIsNotEmpty(q.preTasks) {
-		q.print("Running pretasks...\n\n")
-		for _, task := range q.preTasks {
+	q.iterateAndExecute(q.preTasks, "Running pre-tasks...\n\n")
+	q.iterateAndExecute(q.deployTasks, "Deploying...\n\n")
+	q.iterateAndExecute(q.postTasks, "Running post-tasks...\n\n")
+}
+
+func (q *Queue) iterateAndExecute(queue []*Task, msg string) {
+	if queueIsNotEmpty(queue) {
+		q.print(msg)
+		for _, task := range queue {
 			task.Exec()
 		}
 	}
+}
 
-	q.print("Deploying...\n\n")
-	for _, task := range q.deployTasks {
-		task.Exec()
-	}
-
-	if queueIsNotEmpty(q.postTasks) {
-		q.print("Running posttasks...\n\n")
-		for _, task := range q.deployTask {
-			task.Exec()
-		}
-	}
+func (q *Queue) print(msg string) {
+	fmt.Printf("%s", yellow(msg))
 }
 
 func queueIsNotEmpty(queue []*Task) bool {

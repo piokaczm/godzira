@@ -2,17 +2,20 @@ package task
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/fatih/color"
 )
 
+// Queue is a struct holding tasks for execution during deployment process. It is used
+// as a "governor" since it's a structure which runs all the commands.
 type Queue struct {
-	preTasks    []*Task
-	deployTasks []*Task
-	postTasks   []*Task
+	preTasks    []*Task // tasks executed before actual deployment
+	deployTasks []*Task // tasks of the deployment itself
+	postTasks   []*Task // tasks executed after actual deployment
 }
 
-// Exec executes pre-tasks, deployment and post-tasks queues
+// Exec executes pre-tasks, deployment tasks and post-tasks queues
 func (q *Queue) Exec() {
 	q.iterateAndExecute(q.preTasks, "Running pre-tasks...\n\n")
 	q.iterateAndExecute(q.deployTasks, "Deploying...\n\n")
@@ -23,7 +26,12 @@ func (q *Queue) iterateAndExecute(queue []*Task, msg string) {
 	if queueIsNotEmpty(queue) {
 		q.print(msg)
 		for _, task := range queue {
-			task.Exec()
+			err := task.exec()
+
+			if err != nil {
+				task.fail()
+				os.Exit(2)
+			}
 		}
 	}
 }

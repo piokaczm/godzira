@@ -12,9 +12,9 @@ import (
 const (
 	format = "2006-02-01 15:04:05"
 
-	preTask = iota
-	deployTask
-	postTask
+	PreTask = iota
+	DeployTask
+	PostTask
 )
 
 // colors for printing messages

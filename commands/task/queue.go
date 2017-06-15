@@ -11,6 +11,11 @@ type Queue struct {
 	preTasks    []*Task // tasks executed before actual deployment
 	deployTasks []*Task // tasks of the deployment itself
 	postTasks   []*Task // tasks executed after actual deployment
+	length      int
+}
+
+func (q *Queue) Len() int {
+	return q.length
 }
 
 // Exec executes pre-tasks, deployment tasks and post-tasks queues
@@ -25,6 +30,7 @@ func (q *Queue) iterateAndExecute(queue []*Task, msg string) {
 		q.print(msg)
 		for _, task := range queue {
 			err := task.exec()
+			q.length--
 
 			if err != nil {
 				task.fail()
@@ -43,7 +49,7 @@ func queueIsNotEmpty(queue []*Task) bool {
 }
 
 // Append passes task and pushes it to a proper queue basing on its' type
-func (q *Queue) Append(task *Task) {
+func (q *Queue) Append(task *Task) error {
 	switch task.taskType {
 	case preTask:
 		q.preTasks = append(q.preTasks, task)
@@ -51,5 +57,9 @@ func (q *Queue) Append(task *Task) {
 		q.deployTasks = append(q.deployTasks, task)
 	case postTask:
 		q.postTasks = append(q.postTasks, task)
+	default:
+		return fmt.Errorf("provided task does not belong to any valid queue")
 	}
+	q.length++
+	return nil
 }

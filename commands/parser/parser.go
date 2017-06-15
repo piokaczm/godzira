@@ -2,29 +2,30 @@ package parser
 
 import (
 	"fmt"
+	"io/ioutil"
 
 	"github.com/piokaczm/godzira/commands/task"
 	"gopkg.in/yaml.v2"
 )
 
 type config struct {
-	goos         string                    `yaml:"goos"`
-	goarch       string                    `yaml:"goarch"`
-	test         bool                      `yaml:"test"`
-	strategy     string                    `yaml:"strategy"`
-	binName      string                    `yaml:"binary_name"`
-	environments map[string][]*environment `yaml:"environments"`
-	preTasks     map[string][]*task.Task   `yaml:"pretasks"`
-	postTasks    map[string][]*task.Task   `yaml:"posttasks"`
+	Goos         string                    `yaml:"goos"`
+	Goarch       string                    `yaml:"goarch"`
+	Test         bool                      `yaml:"test"`
+	Strategy     string                    `yaml:"strategy"`
+	BinName      string                    `yaml:"binary_name"`
+	Environments map[string][]*environment `yaml:"environments"`
+	PreTasks     map[string][]*task.Task   `yaml:"pretasks"`
+	PostTasks    map[string][]*task.Task   `yaml:"posttasks"`
 }
 
 type environment struct {
-	host string `yaml:"host"`
-	user string `yaml:"user"`
-	path string `yaml:"path"`
+	Host string `yaml:"host"`
+	User string `yaml:"user"`
+	Path string `yaml:"path"`
 }
 
-func Read(queue *task.Queue) {
+func Read(queue *task.Queue, configPath string) error {
 	// for config parts
 	// - read a part of config
 	// - check for special labels (local, remote, copy)
@@ -32,6 +33,29 @@ func Read(queue *task.Queue) {
 	// - create new task basing on interpretation
 	// - append to a global queue
 
+	conf, err := readYaml(configPath)
+	if err != nil {
+		return err
+	}
+	fmt.Println(conf)
+
+	return nil
+}
+
+func readYaml(configPath string) (*config, error) {
+	conf := &config{}
+
+	configData, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return conf, err
+	}
+
+	err = yaml.Unmarshal(configData, conf)
+	if err != nil {
+		return conf, err
+	}
+
+	return conf, nil
 }
 
 func parse() {

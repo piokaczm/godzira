@@ -33,22 +33,21 @@ type Task struct {
 
 // command represents an actual command which will be executed during deployment process.
 type command struct {
-	name string // name is an actual command, it's the first part of the command passed from config
-	args string // args are arguments for command
+	name string   // name is an actual command, it's the first part of the command passed from config
+	args []string // args are arguments for command
 }
 
 // NewTask is a Task constructor. If a command is malformed it will return an error.
 func NewTask(name, command string, taskType int) (*Task, error) {
 	cmd, err := newCommand(command)
 	return &Task{
-		name:    name,
-		command: cmd,
-		args:    args,
+		name: name,
+		cmd:  cmd,
 	}, err
 }
 
 func newCommand(cmd string) (*command, error) {
-	cmdParts := strings.Split(command, " ")
+	cmdParts := strings.Split(cmd, " ")
 	if len(cmdParts) < 1 { // prolly just check string len
 		return nil, fmt.Errorf("malformed command -> %s", cmd)
 	}

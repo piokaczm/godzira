@@ -3,8 +3,6 @@ package task
 import (
 	"fmt"
 	"os"
-
-	"github.com/fatih/color"
 )
 
 // Queue is a struct holding tasks for execution during deployment process. It is used

@@ -44,8 +44,8 @@ func queueIsNotEmpty(queue []*Task) bool {
 	return len(queue) > 0
 }
 
-// pass task and push it to proper queue basing on type
-func (q *Queue) appendTask(task *Task) {
+// Append passes task and pushes it to a proper queue basing on its' type
+func (q *Queue) Append(task *Task) {
 	switch task.taskType {
 	case preTask:
 		q.preTasks = append(q.preTasks, task)

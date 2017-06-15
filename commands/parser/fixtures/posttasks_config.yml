@@ -1,0 +1,27 @@
+goos: linux
+goarch: amd64
+test: true
+strategy: scp
+binary_name: 'test_name'
+
+environments:
+  staging:
+    - host: pizdki.net
+      user: pizdek
+      path: pizdek/app/
+  production:
+    - host: real.net
+      user: app1
+      path: current/binaries/
+    - host: real2.net
+      user: app2
+      path: current/binaries/
+
+posttasks:
+  - name: restart
+    command: etc/prod/dupa/daemon restart
+    type: remote
+
+  - name: echo
+    command: echo test
+    type: local

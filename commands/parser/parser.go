@@ -64,24 +64,17 @@ func (e *environment) Address() string {
 	return fmt.Sprintf("%s@%s", e.User, e.Host)
 }
 
-func Read(queue *task.Queue, configPath, env string) error {
-	// for config parts
-	// - read a part of config
-	// - check for special labels (local, remote, copy)
-	// - interpret a single task
-	// - create new task basing on interpretation
-	// - append to a global queue
-
+func Read(queue *task.Queue, configPath, env string) []error {
 	conf, err := parse(configPath)
 	if err != nil {
-		return err
+		return []error{err}
 	}
 	conf.env = env
 	fmt.Println(conf)
 
-	// r := &configReader{}
-
-	return nil
+	r := &configReader{}
+	r.read(conf)
+	return r.errors
 }
 
 func parse(configPath string) (*config, error) {
@@ -105,7 +98,7 @@ type configReader struct {
 	queue  *task.Queue
 }
 
-func (cr *configReader) read(conf *config, env string) {
+func (cr *configReader) read(conf *config) {
 	cr.addTestTask(conf)
 
 	for _, unit := range conf.PreTasks {

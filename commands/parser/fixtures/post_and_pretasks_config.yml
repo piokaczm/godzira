@@ -2,7 +2,7 @@ goos: linux
 goarch: amd64
 test: true
 strategy: scp
-binary_name: 'test_name'
+binary_path: 'test_name'
 
 environments:
   staging:

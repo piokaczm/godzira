@@ -34,7 +34,7 @@ func (q *Queue) iterateAndExecute(queue []*Task, msg string) {
 
 			if err != nil {
 				task.fail()
-				os.Exit(2)
+				os.Exit(2) // TODO: that shouldn't be the responsibility of this pkg...
 			}
 		}
 	}
@@ -51,11 +51,11 @@ func queueIsNotEmpty(queue []*Task) bool {
 // Append passes task and pushes it to a proper queue basing on its' type
 func (q *Queue) Append(task *Task) error {
 	switch task.taskType {
-	case preTask:
+	case PreTask:
 		q.preTasks = append(q.preTasks, task)
-	case deployTask:
+	case DeployTask:
 		q.deployTasks = append(q.deployTasks, task)
-	case postTask:
+	case PostTask:
 		q.postTasks = append(q.postTasks, task)
 	default:
 		return fmt.Errorf("provided task does not belong to any valid queue")

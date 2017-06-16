@@ -9,9 +9,12 @@ import (
 )
 
 const (
-	rsync    = "rsync"
-	rsyncArg = "-chavzP"
-	scp      = "scp"
+	rsync       = "rsync"
+	rsyncArg    = "-chavzP"
+	scp         = "scp"
+	copyLabel   = "copy"
+	localLabel  = "local"
+	remoteLabel = "remote"
 )
 
 type config struct {
@@ -19,10 +22,36 @@ type config struct {
 	Goarch       string                    `yaml:"goarch"`
 	Test         bool                      `yaml:"test"`
 	Strategy     string                    `yaml:"strategy"`
-	BinName      string                    `yaml:"binary_name"`
+	BinPath      string                    `yaml:"binary_path"`
 	Environments map[string][]*environment `yaml:"environments"`
-	PreTasks     []*singleTask             `yaml:"pretasks"`
-	PostTasks    []*singleTask             `yaml:"posttasks"`
+	PreTasks     []*unit                   `yaml:"pretasks"`
+	PostTasks    []*unit                   `yaml:"posttasks"`
+	env          string
+}
+
+func (c *config) interpretSingleTask(unit *unit) ([]*interpretedUnit, error) {
+	var interpretedUnits []*interpretedUnit
+
+	switch unit.label {
+	case copyLabel:
+		for _, host := range c.Environments[c.env] {
+			interpretedUnit, err := unit.buildCopyCommand(host.Address(), c.Strategy)
+			if err != nil {
+				return nil, err
+			}
+
+			interpretedUnits = append(interpretedUnits, interpretedUnit)
+		}
+	case localLabel:
+		interpretedUnits = append(interpretedUnits, unit.buildLocalCommand())
+	case remoteLabel: // execute task for each host in the env
+		for _, host := range c.Environments[c.env] {
+			interpretedUnits = append(interpretedUnits, unit.buildRemoteCommand(host.Address()))
+		}
+	default:
+		return nil, fmt.Errorf("[ command: %s ] '%s' label is not supported", unit.name, unit.label)
+	}
+	return interpretedUnits, nil
 }
 
 type environment struct {
@@ -31,12 +60,8 @@ type environment struct {
 	Path string `yaml:"path"`
 }
 
-type singleTask struct {
-	name        string `yaml:"name"`
-	command     string `yaml:"command"`
-	path        string `yaml:"path"`
-	destination string `yaml:"destination"`
-	label       string `yaml:"type"`
+func (e *environment) Address() string {
+	return fmt.Sprintf("%s@%s", e.User, e.Host)
 }
 
 func Read(queue *task.Queue, configPath, env string) error {
@@ -47,18 +72,19 @@ func Read(queue *task.Queue, configPath, env string) error {
 	// - create new task basing on interpretation
 	// - append to a global queue
 
-	conf, err := readYaml(configPath)
+	conf, err := parse(configPath)
 	if err != nil {
 		return err
 	}
+	conf.env = env
 	fmt.Println(conf)
 
-	r := &configReader{}
+	// r := &configReader{}
 
 	return nil
 }
 
-func readYaml(configPath string) (*config, error) {
+func parse(configPath string) (*config, error) {
 	conf := &config{}
 
 	configData, err := ioutil.ReadFile(configPath)
@@ -74,48 +100,53 @@ func readYaml(configPath string) (*config, error) {
 	return conf, nil
 }
 
-func parse() {
-	// actually parse the config
-	// return 3 data structures with raw data, one for each step of deployment
-}
-
 type configReader struct {
 	errors []error
 	queue  *task.Queue
 }
 
 func (cr *configReader) read(conf *config, env string) {
-	// read a raw task and govern its' interpretation process
-	// in case of an error just append it to errors which will be
-	// printed out using Fail method.
+	cr.addTestTask(conf)
 
-	for _, task := range conf.PreTasks {
-		err := cr.queue.Append(task.transposeToQueueTask())
+	for _, unit := range conf.PreTasks {
+		interpretedUnits, err := conf.interpretSingleTask(unit)
 		if err != nil {
 			cr.errors = append(cr.errors, err)
+			continue
+		}
+
+		for _, interpretedUnit := range interpretedUnits {
+			cr.appendTask(interpretedUnit.name, interpretedUnit.command, task.PreTask)
 		}
 	}
 
-	for _, task := range conf.PostTasks {
-		err := cr.queue.Append(task.transposeToQueueTask())
+	for _, unit := range conf.PostTasks {
+		interpretedUnits, err := conf.interpretSingleTask(unit)
 		if err != nil {
 			cr.errors = append(cr.errors, err)
+			continue
+		}
+
+		for _, interpretedUnit := range interpretedUnits {
+			cr.appendTask(interpretedUnit.name, interpretedUnit.command, task.PostTask)
 		}
 	}
 
-	cr.addTestTask(config.Test)
-	cr.addDeployTask(config)
+	err := cr.addDeployTask(conf)
+	if err != nil {
+		cr.errors = append(cr.errors, err)
+	}
 }
 
 func (cr *configReader) addDeployTask(conf *config) error {
-	for _, environment := range c.Environments[env] {
+	for _, host := range conf.Environments[conf.env] {
 		switch conf.Strategy {
 		case rsync:
-			cr.appendTask("deployment", fmt.Sprintf("%s %s", rsync, rsyncArg), task.DeployTask) // build command
+			cr.appendTask("deployment", fmt.Sprintf("%s %s %s %s", rsync, rsyncArg, conf.BinPath, host.Path), task.DeployTask)
 		case scp:
-			cr.appendTask("deployment", fmt.Sprintf("%s %s", scp, "?"), task.DeployTask) // build command
+			cr.appendTask("deployment", fmt.Sprintf("%s %s %s", scp, conf.BinPath, fmt.Sprintf("%s:%s", host.Address(), host.Path)), task.DeployTask)
 		default:
-			return fmt.Errorf("%s startegy is not supported", conf.Strategy)
+			return unsupportedStrategy("deployment", conf.Strategy) // TODO: extract this deployment string ffs
 		}
 	}
 
@@ -129,8 +160,12 @@ func (cr *configReader) addTestTask(conf *config) {
 }
 
 func (cr *configReader) appendTask(name, command string, taskType int) {
-	task := task.NewTask(name, command, taskType)
-	err := cr.queue.Append(task)
+	task, err := task.NewTask(name, command, taskType)
+	if err != nil {
+		cr.errors = append(cr.errors, err)
+	}
+
+	err = cr.queue.Append(task)
 	if err != nil {
 		cr.errors = append(cr.errors, err)
 	}
@@ -138,4 +173,8 @@ func (cr *configReader) appendTask(name, command string, taskType int) {
 
 func (cr *configReader) Fail() {
 	// iterate over errors, print them and gracefully terminate the execution
+}
+
+func unsupportedStrategy(name, strategy string) error {
+	return fmt.Errorf("[ command: %s ] '%s' strategy is not supported", name, strategy)
 }

@@ -32,7 +32,7 @@ type config struct {
 func (c *config) interpretSingleTask(unit *unit) ([]*interpretedUnit, error) {
 	var interpretedUnits []*interpretedUnit
 
-	switch unit.label {
+	switch unit.Label {
 	case copyLabel:
 		for _, host := range c.Environments[c.env] {
 			interpretedUnit, err := unit.buildCopyCommand(host.Address(), c.Strategy)
@@ -49,7 +49,7 @@ func (c *config) interpretSingleTask(unit *unit) ([]*interpretedUnit, error) {
 			interpretedUnits = append(interpretedUnits, unit.buildRemoteCommand(host.Address()))
 		}
 	default:
-		return nil, fmt.Errorf("[ command: %s ] '%s' label is not supported", unit.name, unit.label)
+		return nil, fmt.Errorf("[ command: %s ] '%s' label is not supported", unit.Name, unit.Label)
 	}
 	return interpretedUnits, nil
 }
@@ -70,7 +70,12 @@ func Read(queue *task.Queue, configPath, env string) []error {
 		return []error{err}
 	}
 	conf.env = env
-	fmt.Println(conf)
+	for _, e := range conf.Environments[conf.env] {
+		fmt.Println(*e)
+	}
+	for _, post := range conf.PostTasks {
+		fmt.Println(*post)
+	}
 
 	r := &configReader{}
 	r.read(conf)
@@ -90,7 +95,7 @@ func parse(configPath string) (*config, error) {
 		return conf, err
 	}
 
-	return conf, nil
+	return conf, nil // TODO: validate it?
 }
 
 type configReader struct {

@@ -1,17 +1,13 @@
 package parser
 
-import (
-	"fmt"
-
-	"github.com/piokaczm/godzira/commands/task"
-)
+import "fmt"
 
 type unit struct {
-	name        string `yaml:"name"`
-	command     string `yaml:"command"`
-	path        string `yaml:"path"`
-	destination string `yaml:"destination"`
-	label       string `yaml:"type"`
+	Name        string `yaml:"name"`
+	Command     string `yaml:"command"`
+	Path        string `yaml:"path"`
+	Destination string `yaml:"destination"`
+	Label       string `yaml:"type"`
 }
 
 // local tasks doesn't have to be fired for each remote machine, so basing on provided
@@ -21,32 +17,25 @@ type interpretedUnit struct {
 	command string
 }
 
-func (u *unit) transposeToTask(taskType int, command string) (*task.Task, error) {
-	return task.NewTask(u.name, command, taskType)
-}
-
-func (u *unit) buildCopyCommand(addr, strategy string) (interpretation *interpretedUnit, err error) {
-	interpretation.name = u.name
+func (u *unit) buildCopyCommand(addr, strategy string) (*interpretedUnit, error) {
+	interpretation := &interpretedUnit{name: u.Name}
+	var err error
 
 	switch strategy {
 	case rsync:
-		interpretation.command = fmt.Sprintf("%s %s %s %s", rsync, rsyncArg, u.path, u.destination)
+		interpretation.command = fmt.Sprintf("%s %s %s %s:%s", rsync, rsyncArg, u.Path, addr, u.Destination)
 	case scp:
-		interpretation.command = fmt.Sprintf("%s %s %s:%s", scp, u.path, addr, u.destination)
+		interpretation.command = fmt.Sprintf("%s %s %s:%s", scp, u.Path, addr, u.Destination)
 	default:
-		err = unsupportedStrategy(u.name, strategy)
+		err = unsupportedStrategy(u.Name, strategy)
 	}
-	return
+	return interpretation, err
 }
 
-func (u *unit) buildLocalCommand() (interpretation *interpretedUnit) {
-	interpretation.name = u.name
-	interpretation.command = u.command
-	return
+func (u *unit) buildLocalCommand() *interpretedUnit {
+	return &interpretedUnit{u.Name, u.Command}
 }
 
-func (u *unit) buildRemoteCommand(addr string) (interpretation *interpretedUnit) {
-	interpretation.name = u.name
-	interpretation.command = fmt.Sprintf("ssh %s %s", addr, u.command)
-	return
+func (u *unit) buildRemoteCommand(addr string) *interpretedUnit {
+	return &interpretedUnit{u.Name, fmt.Sprintf("ssh %s %s", addr, u.Command)}
 }

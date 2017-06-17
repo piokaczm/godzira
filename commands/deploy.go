@@ -9,7 +9,22 @@ import (
 	"github.com/piokaczm/godzira/commands/task"
 )
 
-const configPath = "config/deploy.yml"
+const (
+	configPath = "config/deploy.yml"
+	deployed   = `
+                   ,:',:',:'
+              __||_||_||_||__
+         ____["""""""""""""""]____
+         \ " '''''''''''''''''''' \
+  ~^~^~^~^~^^~^~^~^~^~^~^~^~~^~^~^^~~^~^
+     _            _                      _ 
+  __| | ___ _ __ | | ___  _   _  ___  __| |
+ / _  |/ _ \ '_ \| |/ _ \| | | |/ _ \/ _  |
+| (_| |  __/ |_) | | (_) | |_| |  __/ (_| |
+ \__,_|\___| .__/|_|\___/ \__, |\___|\__,_|
+           |_|            |___/            
+  `
+)
 
 // Deploy is a wrapper for deploy process.
 func Deploy(c *cli.Context) {

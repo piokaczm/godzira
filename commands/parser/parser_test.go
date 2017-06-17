@@ -7,8 +7,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRead(t *testing.T) {
+// func TestParsing(t *testing.T) {
+// 	result := parseConfig([]byte(data))
+// 	assert.Equal(t, result.Goos, "linux")
+// 	assert.Equal(t, result.Strategy, "scp")
+// 	assert.Equal(t, result.Goarch, "amd64")
+// 	assert.Equal(t, result.Test, true)
+// 	assert.Equal(t, result.Godep, true)
+// 	assert.Equal(t, result.Slack["webhook"], "https://hooks.slack.com/services/sth/more")
+// 	assert.Equal(t, result.Slack["appname"], "AppName")
+// 	assert.Equal(t, result.Environments["staging"]["host"], "pizda.net")
+// 	assert.Equal(t, result.Environments["staging"]["user"], "pizdek")
+// 	assert.Equal(t, result.Environments["staging"]["path"], "binaries/")
+// 	assert.Equal(t, result.Environments["staging"]["restart_command"], "etc/dupa/daemon restart")
+// 	assert.Equal(t, result.Environments["production"]["host_1"], "real-pizda.net")
+// 	assert.Equal(t, result.Environments["production"]["user_1"], "pizdekmaster")
+// 	assert.Equal(t, result.Environments["production"]["host_2"], "real-pizda2.net")
+// 	assert.Equal(t, result.Environments["production"]["user_2"], "pizdekmaster2")
+// 	assert.Equal(t, result.Environments["production"]["path"], "current/binaries/")
+// 	assert.Equal(t, result.Environments["production"]["restart_command"], "etc/prod/dupa/daemon restart")
+// }
 
+func TestRead(t *testing.T) {
 	t.Run("with simple config", func(*testing.T) {
 		// simple config consists of 2 basic tasks (test, deploy) per host, so we're asserting queue length
 		t.Run("when staging", func(*testing.T) {

@@ -44,6 +44,7 @@ func New(configPath, env string) (*Config, error) {
 }
 
 type Config struct {
+	Name         string                    `yaml:"name"`
 	Goos         string                    `yaml:"goos"`
 	Goarch       string                    `yaml:"goarch"`
 	Test         bool                      `yaml:"test"`

@@ -41,6 +41,6 @@ func TestTaskExec(t *testing.T) {
 		err = task.exec()
 		assert.Error(t, err, "raises an error")
 		assert.NotNil(t, task.err, "sets an error value in task struct")
-		assert.Equal(t, []byte("cp: non: No such file or directory\n"), task.output, "saves command output")
+		assert.Regexp(t, "cp.*non.*No such file or directory", string(task.output), "saves command output")
 	})
 }

@@ -1,9 +1,6 @@
 package task
 
-import (
-	"fmt"
-	"os"
-)
+import "fmt"
 
 // Queue is a struct holding tasks for execution during deployment process. It is used
 // as a "governor" since it's a structure which runs all the commands.
@@ -27,10 +24,19 @@ func (q *Queue) Len() int {
 }
 
 // Exec executes pre-tasks, deployment tasks and post-tasks queues
-func (q *Queue) Exec() {
-	q.iterateAndExecute(q.preTasks, "Running pre-tasks...\n\n")
-	q.iterateAndExecute(q.deployTasks, "Deploying...\n\n")
-	q.iterateAndExecute(q.postTasks, "Running post-tasks...\n\n")
+func (q *Queue) Exec() (err error) {
+	err = q.iterateAndExecute(q.preTasks, "Running pre-tasks...\n\n")
+	if err != nil { // can't collect errors for processing later as it should fail right away
+		return err
+	}
+
+	err = q.iterateAndExecute(q.deployTasks, "Deploying...\n\n")
+	if err != nil {
+		return err
+	}
+
+	err = q.iterateAndExecute(q.postTasks, "Running post-tasks...\n\n")
+	return err
 }
 
 func (q *Queue) iterateAndExecute(queue []*Task, msg string) {
@@ -42,7 +48,7 @@ func (q *Queue) iterateAndExecute(queue []*Task, msg string) {
 
 			if err != nil {
 				task.fail()
-				os.Exit(2) // TODO: that shouldn't be the responsibility of this pkg...
+				return
 			}
 		}
 	}

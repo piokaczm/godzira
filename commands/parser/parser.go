@@ -169,12 +169,6 @@ func (cr *configReader) appendTask(name, command string, taskType int) {
 	}
 }
 
-func (cr *configReader) Fail() {
-	for _, err := range cr.errors {
-		fmt.Println(err)
-	}
-}
-
 func unsupportedStrategy(name, strategy string) error {
 	return fmt.Errorf("[ command: %s ] '%s' strategy is not supported", name, strategy)
 }

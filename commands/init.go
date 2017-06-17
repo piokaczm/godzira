@@ -1,20 +1,22 @@
 package commands
 
 import (
-	"github.com/codegangsta/cli"
+	"fmt"
 	"io"
 	"os"
+
+	"github.com/codegangsta/cli"
 )
 
 func Config(c *cli.Context) {
 	os.Mkdir("./config", 0777)
 
-	f, err := os.Create("config/deploy.yml")
-	checkErr(err)
+	f, err := os.Create(configPath)
+	if err != nil {
+		fmt.Printf("there was en error while trying to create '%s'", configPath)
+		os.Exit(1)
+	}
 	defer f.Close()
-	const (
-		comment = "# see example config file at github.com/piokaczm/godeploy"
-	)
 
-	io.WriteString(f, comment)
+	io.WriteString(f, "# see example config file at github.com/piokaczm/godzira")
 }

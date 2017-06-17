@@ -3,7 +3,7 @@ package slack
 import "github.com/piokaczm/simpleslack"
 
 type slackClient struct {
-	*simpleslack.Slack
+	slack     *simpleslack.Slack
 	available bool
 }
 
@@ -14,8 +14,8 @@ func New(webhook, channel, emoji, name string) *slackClient {
 
 	if webhook != "" {
 		slack = &slackClient{
-			simpleslack.Init(webhook, channel, emoji, name),
-			true,
+			slack:     simpleslack.Init(webhook, channel, emoji, name),
+			available: true,
 		}
 	}
 	return slack
@@ -25,7 +25,7 @@ func New(webhook, channel, emoji, name string) *slackClient {
 // It will send a message if and only if available flag on slackClient struct is set to true.
 func (s *slackClient) PostDanger(msg string) {
 	if s.available {
-		s.PostDanger(msg)
+		s.slack.PostDanger(msg)
 	}
 }
 
@@ -33,6 +33,6 @@ func (s *slackClient) PostDanger(msg string) {
 // It will send a message if and only if available flag on slackClient struct is set to true.
 func (s *slackClient) PostSuccess(msg string) {
 	if s.available {
-		s.PostSuccess(msg)
+		s.slack.PostSuccess(msg)
 	}
 }

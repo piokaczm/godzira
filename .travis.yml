@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - 1.6
+  - 1.8
 
 install:
   - export GOPATH="${TRAVIS_BUILD_DIR}/Godeps/_workspace:$GOPATH"

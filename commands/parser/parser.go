@@ -53,7 +53,7 @@ type Config struct {
 	Environments map[string][]*environment `yaml:"environments"`
 	PreTasks     []*unit                   `yaml:"pretasks"`
 	PostTasks    []*unit                   `yaml:"posttasks"`
-	Slack        *Slack                    `yaml:"slack"`
+	Slack        Slack                     `yaml:"slack"`
 	env          string
 }
 

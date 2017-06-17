@@ -9,7 +9,7 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "godzira"
-	app.Version = "1.0.3"
+	app.Version = "2.0.0"
 	// add more precise description, add some better help text for deploy
 	app.Usage = "Smash your apps to servers just like Godzira would smash a city!"
 	app.Commands = []cli.Command{

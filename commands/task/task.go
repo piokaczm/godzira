@@ -31,6 +31,7 @@ type Task struct {
 	name     string   // name is a string which will be printed out during task execution
 	cmd      *command // cms is a command struct which represents the actual command
 	output   []byte   // output is cmd's output
+	err      error    // error stores errors raised during command execution for printing it in fail()
 	taskType int      // taskType is used for assignment of a task to a proper queue
 }
 
@@ -65,7 +66,9 @@ func newCommand(cmd string) (*command, error) {
 // exec is a wrapper around task execution process.
 func (t *Task) exec() error {
 	t.print()
-	return t.run()
+	err := t.run()
+	t.err = err
+	return err
 }
 
 // run is where a command is executed.
@@ -80,5 +83,11 @@ func (t *Task) print() {
 }
 
 func (t *Task) fail() {
-	fmt.Printf("%7s : task failure '%s'\nTASK OUTPUT:\n%s\n", yellow(time.Now().Format(format)), boldRed(t.name), red(string(t.output)))
+	fmt.Printf(
+		"%7s : task failure '%s'\nTASK OUTPUT:\n%s\n\nERROR:\n%s\n",
+		yellow(time.Now().Format(format)),
+		boldRed(t.name),
+		red(string(t.output)),
+		red(t.err),
+	)
 }

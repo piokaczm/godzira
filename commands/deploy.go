@@ -33,7 +33,7 @@ func Deploy(c *cli.Context) {
 
 	errors := parser.Read(queue, configPath, env) // TODO: allow setting custom config path!
 	if len(errors) > 0 {
-		printErrorsAndTerminate(error)
+		printErrorsAndTerminate(errors)
 	}
 
 	err := queue.Exec()

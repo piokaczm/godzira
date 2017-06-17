@@ -39,7 +39,7 @@ func (q *Queue) Exec() (err error) {
 	return err
 }
 
-func (q *Queue) iterateAndExecute(queue []*Task, msg string) {
+func (q *Queue) iterateAndExecute(queue []*Task, msg string) error {
 	if queueIsNotEmpty(queue) {
 		q.print(msg)
 		for _, task := range queue {
@@ -48,10 +48,11 @@ func (q *Queue) iterateAndExecute(queue []*Task, msg string) {
 
 			if err != nil {
 				task.fail()
-				return
+				return err
 			}
 		}
 	}
+	return nil
 }
 
 func (q *Queue) print(msg string) {

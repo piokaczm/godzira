@@ -17,7 +17,33 @@ const (
 	remoteLabel = "remote"
 )
 
-type config struct {
+func Read(conf *Config, queue *task.Queue) []error {
+	r := &configReader{queue: queue}
+	r.read(conf)
+	return r.errors
+}
+
+func New(configPath, env string) (*Config, error) {
+	conf := &Config{env: env}
+
+	configData, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return conf, err
+	}
+
+	err = yaml.Unmarshal(configData, conf)
+	if err != nil {
+		return conf, fmt.Errorf("[ parsing ] an error occurred during parsing config file, please check if it's formatted correctly")
+	}
+
+	if conf.Environments[conf.env] == nil {
+		return nil, fmt.Errorf("[ parsing ] '%s' couldn't find such an environment in configuration file", conf.env)
+	}
+
+	return conf, nil
+}
+
+type Config struct {
 	Goos         string                    `yaml:"goos"`
 	Goarch       string                    `yaml:"goarch"`
 	Test         bool                      `yaml:"test"`
@@ -26,10 +52,11 @@ type config struct {
 	Environments map[string][]*environment `yaml:"environments"`
 	PreTasks     []*unit                   `yaml:"pretasks"`
 	PostTasks    []*unit                   `yaml:"posttasks"`
+	Slack        *Slack                    `yaml:"slack"`
 	env          string
 }
 
-func (c *config) interpretSingleTask(unit *unit) ([]*interpretedUnit, error) {
+func (c *Config) interpretSingleTask(unit *unit) ([]*interpretedUnit, error) {
 	var interpretedUnits []*interpretedUnit
 
 	switch unit.Label {
@@ -54,6 +81,13 @@ func (c *config) interpretSingleTask(unit *unit) ([]*interpretedUnit, error) {
 	return interpretedUnits, nil
 }
 
+type Slack struct {
+	Channel string `yaml:"channel"`
+	Webhook string `yaml:"webhook"`
+	Emoji   string `yaml:"emoji"`
+	Name    string `yaml:"name"`
+}
+
 type environment struct {
 	Host string `yaml:"host"`
 	User string `yaml:"user"`
@@ -64,43 +98,12 @@ func (e *environment) Address() string {
 	return fmt.Sprintf("%s@%s", e.User, e.Host)
 }
 
-func Read(queue *task.Queue, configPath, env string) []error {
-	conf, err := parse(configPath)
-	if err != nil {
-		return []error{err}
-	}
-	conf.env = env
-	if conf.Environments[conf.env] == nil {
-		return []error{fmt.Errorf("[ parsing ] '%s' couldn't find such an environment in configuration file", conf.env)}
-	}
-
-	r := &configReader{queue: queue}
-	r.read(conf)
-	return r.errors
-}
-
-func parse(configPath string) (*config, error) {
-	conf := &config{}
-
-	configData, err := ioutil.ReadFile(configPath)
-	if err != nil {
-		return conf, err
-	}
-
-	err = yaml.Unmarshal(configData, conf)
-	if err != nil {
-		return conf, fmt.Errorf("[ parsing ] an error occurred during parsing config file, please check if it's formatted correctly")
-	}
-
-	return conf, nil // TODO: validate it?
-}
-
 type configReader struct {
 	errors []error
 	queue  *task.Queue
 }
 
-func (cr *configReader) read(conf *config) {
+func (cr *configReader) read(conf *Config) {
 	cr.addTestTask(conf)
 
 	for _, unit := range conf.PreTasks {
@@ -133,7 +136,7 @@ func (cr *configReader) read(conf *config) {
 	}
 }
 
-func (cr *configReader) addDeployTask(conf *config) error {
+func (cr *configReader) addDeployTask(conf *Config) error {
 	for _, host := range conf.Environments[conf.env] {
 		switch conf.Strategy {
 		case rsync:
@@ -148,7 +151,7 @@ func (cr *configReader) addDeployTask(conf *config) error {
 	return nil
 }
 
-func (cr *configReader) addTestTask(conf *config) {
+func (cr *configReader) addTestTask(conf *Config) {
 	if conf.Test {
 		cr.appendTask("run tests", "go test ./...", task.PreTask)
 	}

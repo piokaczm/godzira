@@ -11,4 +11,4 @@ script:
   - go get -u github.com/alecthomas/gometalinter
   - gometalinter --install
   - gometalinter $(go list -f '{{.Dir}}' ./... | grep -v /vendor/) --config=linters.json --deadline 10m
-  - go test -v $(go list ./... | grep -v /vendor/)
+  - go test -v $(go list ./... | grep -v /vendor/) -cover

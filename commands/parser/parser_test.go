@@ -7,41 +7,75 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// func TestParsing(t *testing.T) {
-// 	result := parseConfig([]byte(data))
-// 	assert.Equal(t, result.Goos, "linux")
-// 	assert.Equal(t, result.Strategy, "scp")
-// 	assert.Equal(t, result.Goarch, "amd64")
-// 	assert.Equal(t, result.Test, true)
-// 	assert.Equal(t, result.Godep, true)
-// 	assert.Equal(t, result.Slack["webhook"], "https://hooks.slack.com/services/sth/more")
-// 	assert.Equal(t, result.Slack["appname"], "AppName")
-// 	assert.Equal(t, result.Environments["staging"]["host"], "pizda.net")
-// 	assert.Equal(t, result.Environments["staging"]["user"], "pizdek")
-// 	assert.Equal(t, result.Environments["staging"]["path"], "binaries/")
-// 	assert.Equal(t, result.Environments["staging"]["restart_command"], "etc/dupa/daemon restart")
-// 	assert.Equal(t, result.Environments["production"]["host_1"], "real-pizda.net")
-// 	assert.Equal(t, result.Environments["production"]["user_1"], "pizdekmaster")
-// 	assert.Equal(t, result.Environments["production"]["host_2"], "real-pizda2.net")
-// 	assert.Equal(t, result.Environments["production"]["user_2"], "pizdekmaster2")
-// 	assert.Equal(t, result.Environments["production"]["path"], "current/binaries/")
-// 	assert.Equal(t, result.Environments["production"]["restart_command"], "etc/prod/dupa/daemon restart")
-// }
+func TestParsing(t *testing.T) {
+	path := "fixtures/simple_config.yml"
+
+	t.Run("with existing environment", func(t *testing.T) {
+		env := "staging"
+		config, err := New(path, env)
+		assert.NoError(t, err)
+
+		// basic data
+		assert.Equal(t, config.Goos, "linux")
+		assert.Equal(t, config.Strategy, "scp")
+		assert.Equal(t, config.Goarch, "amd64")
+		assert.Equal(t, config.Test, true)
+		assert.Equal(t, config.Name, "test_app")
+		assert.Equal(t, config.BinPath, "test_name")
+
+		// slack data
+		assert.Equal(t, config.Slack.Channel, "testchannel")
+		assert.Equal(t, config.Slack.Name, "testname")
+		assert.Equal(t, config.Slack.Webhook, "testwebhook")
+		assert.Equal(t, config.Slack.Emoji, ":test:")
+
+		// environments
+		assert.Len(t, config.Environments["staging"], 1, "adds all staging hosts")
+		assert.Equal(t, config.Environments["staging"][0].Host, "pizdki.net")
+		assert.Equal(t, config.Environments["staging"][0].User, "pizdek")
+		assert.Equal(t, config.Environments["staging"][0].Path, "pizdek/app/")
+
+		assert.Len(t, config.Environments["production"], 2, "adds all staging hosts")
+		assert.Equal(t, config.Environments["production"][0].Host, "real.net")
+		assert.Equal(t, config.Environments["production"][0].User, "app1")
+		assert.Equal(t, config.Environments["production"][0].Path, "current/binaries/")
+		assert.Equal(t, config.Environments["production"][1].Host, "real2.net")
+		assert.Equal(t, config.Environments["production"][1].User, "app2")
+		assert.Equal(t, config.Environments["production"][1].Path, "current/binaries/")
+	})
+
+	t.Run("with non existing environment", func(t *testing.T) {
+		env := "not existing"
+		_, err := New(path, env)
+		assert.Error(t, err)
+	})
+
+	t.Run("with non malformed file", func(t *testing.T) {
+		path = "fixtures/malformed_file.yml"
+		env := "not existing"
+		_, err := New(path, env)
+		assert.Error(t, err)
+	})
+}
 
 func TestRead(t *testing.T) {
 	t.Run("with simple config", func(*testing.T) {
 		// simple config consists of 2 basic tasks (test, deploy) per host, so we're asserting queue length
 		t.Run("when staging", func(*testing.T) {
+			config, err := New("fixtures/simple_config.yml", "staging")
+			assert.NoError(t, err)
 			queue := task.NewQueue()
-			errs := Read(queue, "fixtures/simple_config.yml", "staging")
+			errs := Read(config, queue)
 			assert.Len(t, errs, 0)
 
 			assert.Equal(t, 2, queue.Len(), "adds 2 basic tasks")
 		})
 
 		t.Run("when production", func(*testing.T) {
+			config, err := New("fixtures/simple_config.yml", "production")
+			assert.NoError(t, err)
 			queue := task.NewQueue()
-			errs := Read(queue, "fixtures/simple_config.yml", "production")
+			errs := Read(config, queue)
 			assert.Len(t, errs, 0)
 
 			assert.Equal(t, 3, queue.Len(), "adds 6 basic tasks") // test + 2*deploy
@@ -51,16 +85,20 @@ func TestRead(t *testing.T) {
 	t.Run("with pretasks config", func(*testing.T) {
 		// simple config consists of 4 basic tasks (test, copy, echo, deploy) per host, so we're asserting queue length
 		t.Run("when staging", func(*testing.T) {
+			config, err := New("fixtures/pretasks_config.yml", "staging")
+			assert.NoError(t, err)
 			queue := task.NewQueue()
-			errs := Read(queue, "fixtures/pretasks_config.yml", "staging")
+			errs := Read(config, queue)
 			assert.Len(t, errs, 0)
 
 			assert.Equal(t, 4, queue.Len(), "adds 4 basic tasks")
 		})
 
 		t.Run("when production", func(*testing.T) {
+			config, err := New("fixtures/pretasks_config.yml", "production")
+			assert.NoError(t, err)
 			queue := task.NewQueue()
-			errs := Read(queue, "fixtures/pretasks_config.yml", "production")
+			errs := Read(config, queue)
 			assert.Len(t, errs, 0)
 
 			assert.Equal(t, 6, queue.Len(), "adds 6 basic tasks") // test + 2*copy + echo + 2*deploy
@@ -70,16 +108,20 @@ func TestRead(t *testing.T) {
 	t.Run("with posttasks config", func(*testing.T) {
 		// simple config consists of 4 basic tasks (test, deploy, restart, echo) per host, so we're asserting queue length
 		t.Run("when staging", func(*testing.T) {
+			config, err := New("fixtures/posttasks_config.yml", "staging")
+			assert.NoError(t, err)
 			queue := task.NewQueue()
-			errs := Read(queue, "fixtures/posttasks_config.yml", "staging")
+			errs := Read(config, queue)
 			assert.Len(t, errs, 0)
 
 			assert.Equal(t, 4, queue.Len(), "adds 4 tasks")
 		})
 
 		t.Run("when production", func(*testing.T) {
+			config, err := New("fixtures/posttasks_config.yml", "production")
+			assert.NoError(t, err)
 			queue := task.NewQueue()
-			errs := Read(queue, "fixtures/posttasks_config.yml", "production")
+			errs := Read(config, queue)
 			assert.Len(t, errs, 0)
 
 			assert.Equal(t, 6, queue.Len(), "adds 6 tasks") // test + 2*deploy + 2*restart + echo
@@ -89,16 +131,20 @@ func TestRead(t *testing.T) {
 	t.Run("with posttasks and pretasks config", func(*testing.T) {
 		// simple config consists of 5 basic tasks (test, copy, echo, deploy, restart, echo) per host, so we're asserting queue length
 		t.Run("when staging", func(*testing.T) {
+			config, err := New("fixtures/post_and_pretasks_config.yml", "staging")
+			assert.NoError(t, err)
 			queue := task.NewQueue()
-			errs := Read(queue, "fixtures/post_and_pretasks_config.yml", "staging")
+			errs := Read(config, queue)
 			assert.Len(t, errs, 0)
 
 			assert.Equal(t, 6, queue.Len(), "adds 6 tasks")
 		})
 
 		t.Run("when production", func(*testing.T) {
+			config, err := New("fixtures/post_and_pretasks_config.yml", "production")
+			assert.NoError(t, err)
 			queue := task.NewQueue()
-			errs := Read(queue, "fixtures/post_and_pretasks_config.yml", "production")
+			errs := Read(config, queue)
 			assert.Len(t, errs, 0)
 
 			assert.Equal(t, 9, queue.Len(), "adds 9 tasks") // test + 2*copy + echo + 2*deploy + 2*restart + echo
@@ -106,16 +152,17 @@ func TestRead(t *testing.T) {
 	})
 
 	t.Run("with malformed config", func(*testing.T) {
+		config, err := New("fixtures/malformed_config.yml", "staging")
+		assert.NoError(t, err)
 		queue := task.NewQueue()
-		errs := Read(queue, "fixtures/malformed_config.yml", "staging")
+		errs := Read(config, queue)
 		assert.Len(t, errs, 4, "appends error for each malformation")
 	})
 }
 
 func TestInterpretSingleTask(t *testing.T) {
-	conf, err := parse("fixtures/post_and_pretasks_config.yml") // 2 production hosts
+	conf, err := New("fixtures/post_and_pretasks_config.yml", "production") // 2 production hosts
 	assert.NoError(t, err)
-	conf.env = "production"
 
 	t.Run("with copy task", func(*testing.T) {
 		unit := &unit{

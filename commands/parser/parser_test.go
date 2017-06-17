@@ -8,11 +8,11 @@ import (
 )
 
 func TestRead(t *testing.T) {
-	queue := &task.Queue{}
 
 	t.Run("with simple config", func(*testing.T) {
 		// simple config consists of 2 basic tasks (test, deploy) per host, so we're asserting queue length
 		t.Run("when staging", func(*testing.T) {
+			queue := task.NewQueue()
 			errs := Read(queue, "fixtures/simple_config.yml", "staging")
 			assert.Len(t, errs, 0)
 
@@ -20,6 +20,7 @@ func TestRead(t *testing.T) {
 		})
 
 		t.Run("when production", func(*testing.T) {
+			queue := task.NewQueue()
 			errs := Read(queue, "fixtures/simple_config.yml", "production")
 			assert.Len(t, errs, 0)
 
@@ -30,6 +31,7 @@ func TestRead(t *testing.T) {
 	t.Run("with pretasks config", func(*testing.T) {
 		// simple config consists of 4 basic tasks (test, copy, echo, deploy) per host, so we're asserting queue length
 		t.Run("when staging", func(*testing.T) {
+			queue := task.NewQueue()
 			errs := Read(queue, "fixtures/pretasks_config.yml", "staging")
 			assert.Len(t, errs, 0)
 
@@ -37,6 +39,7 @@ func TestRead(t *testing.T) {
 		})
 
 		t.Run("when production", func(*testing.T) {
+			queue := task.NewQueue()
 			errs := Read(queue, "fixtures/pretasks_config.yml", "production")
 			assert.Len(t, errs, 0)
 
@@ -47,6 +50,7 @@ func TestRead(t *testing.T) {
 	t.Run("with posttasks config", func(*testing.T) {
 		// simple config consists of 4 basic tasks (test, deploy, restart, echo) per host, so we're asserting queue length
 		t.Run("when staging", func(*testing.T) {
+			queue := task.NewQueue()
 			errs := Read(queue, "fixtures/posttasks_config.yml", "staging")
 			assert.Len(t, errs, 0)
 
@@ -54,6 +58,7 @@ func TestRead(t *testing.T) {
 		})
 
 		t.Run("when production", func(*testing.T) {
+			queue := task.NewQueue()
 			errs := Read(queue, "fixtures/posttasks_config.yml", "production")
 			assert.Len(t, errs, 0)
 
@@ -64,6 +69,7 @@ func TestRead(t *testing.T) {
 	t.Run("with posttasks and pretasks config", func(*testing.T) {
 		// simple config consists of 5 basic tasks (test, copy, echo, deploy, restart, echo) per host, so we're asserting queue length
 		t.Run("when staging", func(*testing.T) {
+			queue := task.NewQueue()
 			errs := Read(queue, "fixtures/post_and_pretasks_config.yml", "staging")
 			assert.Len(t, errs, 0)
 
@@ -71,6 +77,7 @@ func TestRead(t *testing.T) {
 		})
 
 		t.Run("when production", func(*testing.T) {
+			queue := task.NewQueue()
 			errs := Read(queue, "fixtures/post_and_pretasks_config.yml", "production")
 			assert.Len(t, errs, 0)
 
@@ -79,55 +86,63 @@ func TestRead(t *testing.T) {
 	})
 }
 
-func TestBuildCopyCommand(t *testing.T) {
-	unit := &unit{
-		Name:        "copy",
-		Path:        "/test/.env",
-		Destination: "/remote_test/.env",
-	}
-	addr := "app@test.com"
+func TestInterpretSingleTask(t *testing.T) {
+	conf, err := parse("fixtures/post_and_pretasks_config.yml") // 2 production hosts
+	assert.NoError(t, err)
+	conf.env = "production"
 
-	t.Run("with rsync", func(*testing.T) {
-		interpreted, err := unit.buildCopyCommand(addr, rsync)
+	t.Run("with copy task", func(*testing.T) {
+		unit := &unit{
+			Name:    "test",
+			Command: "test command",
+			Label:   copyLabel,
+		}
+
+		tasks, err := conf.interpretSingleTask(unit)
 		assert.NoError(t, err)
-
-		assert.Equal(t, "rsync -chavzP /test/.env app@test.com:/remote_test/.env", interpreted.command, "creates proper command")
-		assert.Equal(t, "copy", interpreted.name, "creates proper name")
+		assert.Len(t, tasks, 2, "adds copy task for each host")
 	})
 
-	t.Run("with scp", func(*testing.T) {
-		interpreted, err := unit.buildCopyCommand(addr, scp)
-		assert.NoError(t, err)
+	t.Run("with local task", func(*testing.T) {
+		unit := &unit{
+			Name:    "test",
+			Command: "test command",
+			Label:   localLabel,
+		}
 
-		assert.Equal(t, "scp /test/.env app@test.com:/remote_test/.env", interpreted.command, "creates proper command")
-		assert.Equal(t, "copy", interpreted.name, "creates proper name")
+		tasks, err := conf.interpretSingleTask(unit)
+		assert.NoError(t, err)
+		assert.Len(t, tasks, 1, "adds local task once only")
 	})
 
-	t.Run("with not supported strategy", func(*testing.T) {
-		_, err := unit.buildCopyCommand(addr, "not_supported")
-		assert.Error(t, err, "raises error")
+	t.Run("with remote task", func(*testing.T) {
+		unit := &unit{
+			Name:    "test",
+			Command: "test command",
+			Label:   remoteLabel,
+		}
+
+		tasks, err := conf.interpretSingleTask(unit)
+		assert.NoError(t, err)
+		assert.Len(t, tasks, 2, "adds remote task each host")
+	})
+
+	t.Run("with task with unsupported label", func(*testing.T) {
+		unit := &unit{
+			Name:    "test",
+			Command: "test command",
+			Label:   "unsupported label",
+		}
+
+		_, err := conf.interpretSingleTask(unit)
+		assert.Error(t, err, "raises and error")
 	})
 }
 
-func TestBuildLocalCommand(t *testing.T) {
-	unit := &unit{
-		Name:    "echo",
-		Command: "echo dupa",
-	}
+func TestAppendTask(t *testing.T) {
+	cr := configReader{queue: task.NewQueue()}
 
-	interpreted := unit.buildLocalCommand()
-	assert.Equal(t, "echo", interpreted.name, "creates proper name")
-	assert.Equal(t, "echo dupa", interpreted.command, "creates proper comand")
-}
-
-func TestBuildRemoteCommand(t *testing.T) {
-	unit := &unit{
-		Name:    "echo",
-		Command: "echo dupa",
-	}
-	addr := "app@test.com"
-
-	interpreted := unit.buildRemoteCommand(addr)
-	assert.Equal(t, "echo", interpreted.name, "creates proper name")
-	assert.Equal(t, "ssh app@test.com echo dupa", interpreted.command, "creates proper comand")
+	cr.appendTask("test", "test command", 1)
+	assert.Len(t, cr.errors, 0, "no errors occured")
+	assert.Equal(t, 1, cr.queue.Len(), "appends the task")
 }

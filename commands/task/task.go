@@ -41,8 +41,9 @@ type command struct {
 func NewTask(name, command string, taskType int) (*Task, error) {
 	cmd, err := newCommand(command)
 	return &Task{
-		name: name,
-		cmd:  cmd,
+		name:     name,
+		cmd:      cmd,
+		taskType: taskType,
 	}, err
 }
 

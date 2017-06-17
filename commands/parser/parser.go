@@ -77,7 +77,7 @@ func Read(queue *task.Queue, configPath, env string) []error {
 		fmt.Println(*post)
 	}
 
-	r := &configReader{}
+	r := &configReader{queue: queue}
 	r.read(conf)
 	return r.errors
 }

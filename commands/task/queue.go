@@ -14,6 +14,14 @@ type Queue struct {
 	length      int
 }
 
+func NewQueue() *Queue {
+	return &Queue{
+		preTasks:    make([]*Task, 0),
+		deployTasks: make([]*Task, 0),
+		postTasks:   make([]*Task, 0),
+	}
+}
+
 func (q *Queue) Len() int {
 	return q.length
 }

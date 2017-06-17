@@ -170,7 +170,9 @@ func (cr *configReader) appendTask(name, command string, taskType int) {
 }
 
 func (cr *configReader) Fail() {
-	// iterate over errors, print them and gracefully terminate the execution
+	for _, err := range cr.errors {
+		fmt.Println(err)
+	}
 }
 
 func unsupportedStrategy(name, strategy string) error {

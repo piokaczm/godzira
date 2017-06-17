@@ -19,8 +19,25 @@ func NewQueue() *Queue {
 	}
 }
 
+// Len returns the length of all tasks in all queues combined.
 func (q *Queue) Len() int {
 	return q.length
+}
+
+// Append passes task and pushes it to a proper queue basing on its' type
+func (q *Queue) Append(task *Task) error {
+	switch task.taskType {
+	case PreTask:
+		q.preTasks = append(q.preTasks, task)
+	case DeployTask:
+		q.deployTasks = append(q.deployTasks, task)
+	case PostTask:
+		q.postTasks = append(q.postTasks, task)
+	default:
+		return fmt.Errorf("provided task does not belong to any valid queue")
+	}
+	q.length++
+	return nil
 }
 
 // Exec executes pre-tasks, deployment tasks and post-tasks queues
@@ -61,20 +78,4 @@ func (q *Queue) print(msg string) {
 
 func queueIsNotEmpty(queue []*Task) bool {
 	return len(queue) > 0
-}
-
-// Append passes task and pushes it to a proper queue basing on its' type
-func (q *Queue) Append(task *Task) error {
-	switch task.taskType {
-	case PreTask:
-		q.preTasks = append(q.preTasks, task)
-	case DeployTask:
-		q.deployTasks = append(q.deployTasks, task)
-	case PostTask:
-		q.postTasks = append(q.postTasks, task)
-	default:
-		return fmt.Errorf("provided task does not belong to any valid queue")
-	}
-	q.length++
-	return nil
 }

@@ -70,11 +70,8 @@ func Read(queue *task.Queue, configPath, env string) []error {
 		return []error{err}
 	}
 	conf.env = env
-	for _, e := range conf.Environments[conf.env] {
-		fmt.Println(*e)
-	}
-	for _, post := range conf.PostTasks {
-		fmt.Println(*post)
+	if conf.Environments[conf.env] == nil {
+		return []error{fmt.Errorf("[ parsing ] '%s' couldn't find such an environment in configuration file", conf.env)}
 	}
 
 	r := &configReader{queue: queue}
@@ -92,7 +89,7 @@ func parse(configPath string) (*config, error) {
 
 	err = yaml.Unmarshal(configData, conf)
 	if err != nil {
-		return conf, err
+		return conf, fmt.Errorf("[ parsing ] an error occurred during parsing config file, please check if it's formatted correctly")
 	}
 
 	return conf, nil // TODO: validate it?

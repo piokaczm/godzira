@@ -28,10 +28,12 @@ const (
 
 // Deploy is a wrapper for deploy process.
 func Deploy(c *cli.Context) {
+	validateCommand(c)
+
 	env := c.Args()[0]
 	queue := task.NewQueue()
 
-	errors := parser.Read(queue, configPath, env) // TODO: allow setting custom config path!
+	errors := parser.Read(queue, configPath, env)
 	if len(errors) > 0 {
 		printErrorsAndTerminate(errors)
 	}
@@ -49,4 +51,18 @@ func printErrorsAndTerminate(errors []error) {
 		fmt.Println(err) // do it in red!
 	}
 	os.Exit(1)
+}
+
+func validateCommand(c *cli.Context) {
+	// check if at least env was passed to the command
+	if len(c.Args()) < 1 {
+		fmt.Println("please provide deployment env")
+		os.Exit(1)
+	}
+
+	// check if config file exists
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		fmt.Println("couldn't find config file 'config/deploy.yml'")
+		os.Exit(1)
+	}
 }

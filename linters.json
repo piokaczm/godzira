@@ -1,0 +1,4 @@
+{
+  "DisableAll": true,
+  "Enable": ["vet", "deadcode", "errcheck", "structcheck", "gosimple", "staticcheck", "golint"]
+}

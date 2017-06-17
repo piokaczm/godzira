@@ -1,9 +1,10 @@
 package main
 
 import (
+	"os"
+
 	"github.com/codegangsta/cli"
 	"github.com/piokaczm/godzira/commands"
-	"os"
 )
 
 func main() {
@@ -25,5 +26,8 @@ func main() {
 		},
 	}
 
-	app.Run(os.Args)
+	err := app.Run(os.Args)
+	if err != nil {
+		panic(err) // one last panic [*]
+	}
 }

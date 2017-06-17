@@ -16,7 +16,7 @@ func main() {
 		{
 			Name:   "init",
 			Usage:  "build config directory and config file",
-			Action: commands.Config,
+			Action: commands.Init,
 		},
 		{
 			Name:   "deploy",

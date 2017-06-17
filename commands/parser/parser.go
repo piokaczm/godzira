@@ -17,12 +17,18 @@ const (
 	remoteLabel = "remote"
 )
 
+// Read accepts parsed config and queue as arguments and basing on the config appends
+// tasks from it to proper queues. If errors occur they're ignored during reading action
+// and returned to the caller for further processing.
 func Read(conf *Config, queue *task.Queue) []error {
 	r := &configReader{queue: queue}
 	r.read(conf)
 	return r.errors
 }
 
+// New parses configuration file from provided path and returns parsed Config structed.
+// If there's an issue reading the file, its' format is invalid or provided env variable is
+// not in it, an error will be returned.
 func New(configPath, env string) (*Config, error) {
 	conf := &Config{env: env}
 
@@ -43,6 +49,7 @@ func New(configPath, env string) (*Config, error) {
 	return conf, nil
 }
 
+// Config is a struct representing godzira's configuration file.
 type Config struct {
 	Name         string                    `yaml:"name"`
 	Goos         string                    `yaml:"goos"`
@@ -63,7 +70,7 @@ func (c *Config) interpretSingleTask(unit *unit) ([]*interpretedUnit, error) {
 	switch unit.Label {
 	case copyLabel:
 		for _, host := range c.Environments[c.env] {
-			interpretedUnit, err := unit.buildCopyCommand(host.Address(), c.Strategy)
+			interpretedUnit, err := unit.buildCopyCommand(host.address(), c.Strategy)
 			if err != nil {
 				return nil, err
 			}
@@ -74,7 +81,7 @@ func (c *Config) interpretSingleTask(unit *unit) ([]*interpretedUnit, error) {
 		interpretedUnits = append(interpretedUnits, unit.buildLocalCommand())
 	case remoteLabel: // execute task for each host in the env
 		for _, host := range c.Environments[c.env] {
-			interpretedUnits = append(interpretedUnits, unit.buildRemoteCommand(host.Address()))
+			interpretedUnits = append(interpretedUnits, unit.buildRemoteCommand(host.address()))
 		}
 	default:
 		return nil, fmt.Errorf("[ command: %s ] '%s' label is not supported", unit.Name, unit.Label)
@@ -82,6 +89,8 @@ func (c *Config) interpretSingleTask(unit *unit) ([]*interpretedUnit, error) {
 	return interpretedUnits, nil
 }
 
+// Slack represents slack configuration. It's exported, so a caller can
+// use parsed values to initialize a slack client of his choice.
 type Slack struct {
 	Channel string `yaml:"channel"`
 	Webhook string `yaml:"webhook"`
@@ -95,7 +104,7 @@ type environment struct {
 	Path string `yaml:"path"`
 }
 
-func (e *environment) Address() string {
+func (e *environment) address() string {
 	return fmt.Sprintf("%s@%s", e.User, e.Host)
 }
 
@@ -143,7 +152,7 @@ func (cr *configReader) addDeployTask(conf *Config) error {
 		case rsync:
 			cr.appendTask("deployment", fmt.Sprintf("%s %s %s %s", rsync, rsyncArg, conf.BinPath, host.Path), task.DeployTask)
 		case scp:
-			cr.appendTask("deployment", fmt.Sprintf("%s %s %s", scp, conf.BinPath, fmt.Sprintf("%s:%s", host.Address(), host.Path)), task.DeployTask)
+			cr.appendTask("deployment", fmt.Sprintf("%s %s %s", scp, conf.BinPath, fmt.Sprintf("%s:%s", host.address(), host.Path)), task.DeployTask)
 		default:
 			return unsupportedStrategy("deployment", conf.Strategy) // TODO: extract this deployment string ffs
 		}

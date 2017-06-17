@@ -12,9 +12,9 @@ import (
 const (
 	format = "2006-02-01 15:04:05"
 
-	PreTask = iota
-	DeployTask
-	PostTask
+	PreTask    = iota // PreTask is an enum for pretask type
+	DeployTask        // DeployTask is an enum for deploy type
+	PostTask          // PostTask is an enum for prosttask type
 )
 
 // colors for printing messages

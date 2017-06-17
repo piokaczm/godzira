@@ -8,7 +8,8 @@ import (
 	"github.com/codegangsta/cli"
 )
 
-func Config(c *cli.Context) {
+// Init creates config dir along with empty deploy.yml file with link to example configuration.
+func Init(c *cli.Context) {
 	os.Mkdir("./config", 0777)
 
 	f, err := os.Create(configPath)

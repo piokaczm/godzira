@@ -11,10 +11,12 @@ var (
 	white = color.New(color.Bold).SprintFunc()
 )
 
+// PrintWarning prints provided label in standard font and provided msg in bold red.
 func PrintWarning(label, msg string) {
 	fmt.Printf("%s %s\n", label, red(msg))
 }
 
+// PrintInfo prints provided label in standard font and provided msg in bold white.
 func PrintInfo(label, msg string) {
 	fmt.Printf("%s %s\n", label, white(msg))
 }

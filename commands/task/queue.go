@@ -11,6 +11,7 @@ type Queue struct {
 	length      int
 }
 
+// NewQueue creates new *Queue and initializes all queues in it.
 func NewQueue() *Queue {
 	return &Queue{
 		preTasks:    make([]*Task, 0),

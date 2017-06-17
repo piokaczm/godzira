@@ -1,4 +1,10 @@
 {
   "DisableAll": true,
-  "Enable": ["vet", "deadcode", "errcheck", "structcheck", "gosimple", "staticcheck", "golint"]
+  "Enable": ["vet", "deadcode", "errcheck", "structcheck", "gosimple", "staticcheck", "golint"],
+    "Exclude": [
+      ".*exported func New returns unexported type.*slack.slackClient.*",
+      ".*exported const DeployTask should have comment.*",
+      ".*exported const PreTask should have comment.*",
+      ".*exported const PostTask should have comment.*"
+    ]
 }

@@ -49,7 +49,7 @@ func NewTask(name, command string, taskType int) (*Task, error) {
 
 func newCommand(cmd string) (*command, error) {
 	cmdParts := strings.Split(cmd, " ")
-	if len(cmdParts) < 1 { // prolly just check string len
+	if len(cmd) < 1 {
 		return nil, fmt.Errorf("malformed command -> %s", cmd)
 	}
 

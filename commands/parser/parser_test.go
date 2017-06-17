@@ -84,6 +84,12 @@ func TestRead(t *testing.T) {
 			assert.Equal(t, 9, queue.Len(), "adds 9 tasks") // test + 2*copy + echo + 2*deploy + 2*restart + echo
 		})
 	})
+
+	t.Run("with malformed config", func(*testing.T) {
+		queue := task.NewQueue()
+		errs := Read(queue, "fixtures/malformed_config.yml", "staging")
+		assert.Len(t, errs, 4, "appends error for each malformation")
+	})
 }
 
 func TestInterpretSingleTask(t *testing.T) {

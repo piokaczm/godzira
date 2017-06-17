@@ -1,0 +1,33 @@
+goos: linux
+goarch: amd64
+test: true
+strategy: unsupported
+binary_path: 'test_name'
+
+environments:
+  staging:
+    - host: pizdki.net
+      user: pizdek
+      path: pizdek/app/
+  production:
+    - host: real.net
+      user: app1
+      path: current/binaries/
+    - host: real2.net
+      user: app2
+      path: current/binaries/
+
+pretasks:
+  - name: copy env
+    path: /home/test/.env
+    destination: /home/app/.env
+    type: unsupported
+
+posttasks:
+  - name: restart
+    command: etc/prod/dupa/daemon restart
+    type: unsupported
+
+  - name: restart
+    command:
+    type: local

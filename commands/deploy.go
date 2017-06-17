@@ -6,12 +6,16 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/piokaczm/godzira/commands/parser"
+	"github.com/piokaczm/godzira/commands/printer"
 	"github.com/piokaczm/godzira/commands/task"
 )
 
 const (
+	errorLabel = "[ error ]"
+	infoLabel  = "[ info  ]"
 	configPath = "config/deploy.yml"
 	deployed   = `
+
                    ,:',:',:'
               __||_||_||_||__
          ____["""""""""""""""]____
@@ -28,17 +32,22 @@ const (
 
 // Deploy is a wrapper for deploy process.
 func Deploy(c *cli.Context) {
+	printer.PrintInfo(infoLabel, "Godzira is starting deployment...")
 	validateCommand(c)
 
 	env := c.Args()[0]
 	queue := task.NewQueue()
-
-	errors := parser.Read(queue, configPath, env)
-	if len(errors) > 0 {
-		printErrorsAndTerminate(errors)
+	config, err := parser.New(configPath, env)
+	if err != nil {
+		printErrorsAndTerminate(err)
 	}
 
-	err := queue.Exec()
+	errors := parser.Read(config, queue)
+	if len(errors) > 0 {
+		printErrorsAndTerminate(errors...)
+	}
+
+	err = queue.Exec()
 	if err != nil {
 		os.Exit(1)
 	}
@@ -46,9 +55,9 @@ func Deploy(c *cli.Context) {
 	fmt.Println(deployed)
 }
 
-func printErrorsAndTerminate(errors []error) {
+func printErrorsAndTerminate(errors ...error) {
 	for _, err := range errors {
-		fmt.Println(err) // do it in red!
+		printer.PrintWarning(errorLabel, err.Error())
 	}
 	os.Exit(1)
 }
@@ -56,13 +65,13 @@ func printErrorsAndTerminate(errors []error) {
 func validateCommand(c *cli.Context) {
 	// check if at least env was passed to the command
 	if len(c.Args()) < 1 {
-		fmt.Println("please provide deployment env")
+		printer.PrintWarning(errorLabel, "please provide deployment env")
 		os.Exit(1)
 	}
 
 	// check if config file exists
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		fmt.Println("couldn't find config file 'config/deploy.yml'")
+		printer.PrintWarning(errorLabel, "couldn't find config file 'config/deploy.yml'")
 		os.Exit(1)
 	}
 }

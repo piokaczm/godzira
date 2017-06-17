@@ -19,8 +19,11 @@ const (
 
 // colors for printing messages
 var (
-	yellow = color.New(color.FgYellow).SprintFunc()
-	red    = color.New(color.FgRed).SprintFunc()
+	yellow     = color.New(color.FgYellow).SprintFunc()
+	boldYellow = color.New(color.FgYellow).Add(color.Bold).SprintFunc()
+	red        = color.New(color.FgRed).SprintFunc()
+	boldRed    = color.New(color.FgRed).Add(color.Bold).SprintFunc()
+	bold       = color.New(color.Bold).SprintFunc()
 )
 
 // Task represents single step of deployment.
@@ -73,9 +76,9 @@ func (t *Task) run() error {
 }
 
 func (t *Task) print() {
-	fmt.Printf("%7s : executing task '%s'\n", yellow(time.Now().Format(format)), t.name)
+	fmt.Printf("%7s : executing task '%s'\n", yellow(time.Now().Format(format)), bold(t.name))
 }
 
 func (t *Task) fail() {
-	fmt.Printf("%7s : task failure '%s'\nCOMMAND OUTPUT: %s", yellow(time.Now().Format(format)), red(t.name), red(t.output))
+	fmt.Printf("%7s : task failure '%s'\nTASK OUTPUT:\n%s\n", yellow(time.Now().Format(format)), boldRed(t.name), red(string(t.output)))
 }

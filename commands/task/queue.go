@@ -25,17 +25,17 @@ func (q *Queue) Len() int {
 
 // Exec executes pre-tasks, deployment tasks and post-tasks queues
 func (q *Queue) Exec() (err error) {
-	err = q.iterateAndExecute(q.preTasks, "Running pre-tasks...\n\n")
+	err = q.iterateAndExecute(q.preTasks, "\nRunning pre-tasks...\n\n")
 	if err != nil { // can't collect errors for processing later as it should fail right away
 		return err
 	}
 
-	err = q.iterateAndExecute(q.deployTasks, "Deploying...\n\n")
+	err = q.iterateAndExecute(q.deployTasks, "\nDeploying...\n\n")
 	if err != nil {
 		return err
 	}
 
-	err = q.iterateAndExecute(q.postTasks, "Running post-tasks...\n\n")
+	err = q.iterateAndExecute(q.postTasks, "\nRunning post-tasks...\n\n")
 	return err
 }
 
@@ -56,7 +56,7 @@ func (q *Queue) iterateAndExecute(queue []*Task, msg string) error {
 }
 
 func (q *Queue) print(msg string) {
-	fmt.Printf("%s", yellow(msg))
+	fmt.Printf("%s", boldYellow(msg))
 }
 
 func queueIsNotEmpty(queue []*Task) bool {

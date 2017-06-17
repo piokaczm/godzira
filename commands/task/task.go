@@ -73,7 +73,7 @@ func (t *Task) exec() error {
 
 // run is where a command is executed.
 func (t *Task) run() error {
-	output, err := exec.Command(t.cmd.name, t.cmd.args...).Output()
+	output, err := exec.Command(t.cmd.name, t.cmd.args...).CombinedOutput()
 	t.output = output
 	return err
 }
@@ -84,7 +84,7 @@ func (t *Task) print() {
 
 func (t *Task) fail() {
 	fmt.Printf(
-		"%7s : task failure '%s'\nTASK OUTPUT:\n%s\n\nERROR:\n%s\n",
+		"%7s : task failure '%s'\nTASK OUTPUT:\n%s\nERROR:\n%s\n",
 		yellow(time.Now().Format(format)),
 		boldRed(t.name),
 		red(string(t.output)),

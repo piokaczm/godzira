@@ -52,8 +52,6 @@ func New(configPath, env string) (*Config, error) {
 // Config is a struct representing godzira's configuration file.
 type Config struct {
 	Name         string                    `yaml:"name"`
-	Goos         string                    `yaml:"goos"`
-	Goarch       string                    `yaml:"goarch"`
 	Test         bool                      `yaml:"test"`
 	Strategy     string                    `yaml:"strategy"`
 	BinPath      string                    `yaml:"binary_path"`

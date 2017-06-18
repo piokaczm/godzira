@@ -1,5 +1,3 @@
-goos: linux
-goarch: amd64
 test: true
 strategy: scp
 binary_path: 'test_name'

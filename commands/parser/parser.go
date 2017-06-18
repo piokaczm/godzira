@@ -177,7 +177,7 @@ func (cr *configReader) addDeployTask(conf *Config) error {
 			interpretedUnit.name,
 			interpretedUnit.command,
 			interpretedUnit.host,
-			task.PostTask,
+			task.DeployTask,
 		)
 	}
 

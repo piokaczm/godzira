@@ -68,7 +68,7 @@ func (c *Config) interpretSingleTask(unit *unit) ([]*interpretedUnit, error) {
 
 	switch unit.Label {
 	case copyLabel:
-		for _, host := range c.Environments[c.env] {
+		for _, host := range c.currentEnv() {
 			interpretedUnit, err := unit.buildCopyCommand(host.address(), c.Strategy)
 			if err != nil {
 				return nil, err
@@ -79,13 +79,17 @@ func (c *Config) interpretSingleTask(unit *unit) ([]*interpretedUnit, error) {
 	case localLabel:
 		interpretedUnits = append(interpretedUnits, unit.buildLocalCommand())
 	case remoteLabel: // execute task for each host in the env
-		for _, host := range c.Environments[c.env] {
+		for _, host := range c.currentEnv() {
 			interpretedUnits = append(interpretedUnits, unit.buildRemoteCommand(host.address()))
 		}
 	default:
 		return nil, fmt.Errorf("[ command: %s ] '%s' label is not supported", unit.Name, unit.Label)
 	}
 	return interpretedUnits, nil
+}
+
+func (c *Config) currentEnv() []*environment {
+	return c.Environments[c.env]
 }
 
 // Slack represents slack configuration. It's exported, so a caller can
@@ -156,25 +160,25 @@ func (cr *configReader) read(conf *Config) {
 }
 
 func (cr *configReader) addDeployTask(conf *Config) error {
-	for _, host := range conf.Environments[conf.env] {
-		switch conf.Strategy {
-		case rsync:
-			cr.appendTask(
-				"deployment",
-				fmt.Sprintf("%s %s %s %s:%s", rsync, rsyncArg, conf.BinPath, host.address(), host.Path),
-				host.address(),
-				task.DeployTask,
-			)
-		case scp:
-			cr.appendTask(
-				"deployment",
-				fmt.Sprintf("%s %s %s", scp, conf.BinPath, fmt.Sprintf("%s:%s", host.address(), host.Path)),
-				host.address(),
-				task.DeployTask,
-			)
-		default:
-			return unsupportedStrategy("deployment", conf.Strategy) // TODO: extract this deployment string ffs
+	for _, host := range conf.currentEnv() {
+		deployUnit := &unit{
+			Name:        "deployment",
+			Label:       copyLabel,
+			Path:        conf.BinPath,
+			Destination: host.Path,
 		}
+
+		interpretedUnit, err := deployUnit.buildCopyCommand(host.address(), conf.Strategy)
+		if err != nil {
+			return err
+		}
+
+		cr.appendTask(
+			interpretedUnit.name,
+			interpretedUnit.command,
+			interpretedUnit.host,
+			task.PostTask,
+		)
 	}
 
 	return nil

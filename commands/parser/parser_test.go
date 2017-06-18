@@ -16,9 +16,7 @@ func TestParsing(t *testing.T) {
 		assert.NoError(t, err)
 
 		// basic data
-		assert.Equal(t, config.Goos, "linux")
 		assert.Equal(t, config.Strategy, "scp")
-		assert.Equal(t, config.Goarch, "amd64")
 		assert.Equal(t, config.Test, true)
 		assert.Equal(t, config.Name, "test_app")
 		assert.Equal(t, config.BinPath, "test_name")
@@ -215,7 +213,7 @@ func TestInterpretSingleTask(t *testing.T) {
 func TestAppendTask(t *testing.T) {
 	cr := configReader{queue: task.NewQueue()}
 
-	cr.appendTask("test", "test command", 1)
+	cr.appendTask("test", "test command", "host", 1)
 	assert.Len(t, cr.errors, 0, "no errors occured")
 	assert.Equal(t, 1, cr.queue.Len(), "appends the task")
 }

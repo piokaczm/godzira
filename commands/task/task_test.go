@@ -8,7 +8,7 @@ import (
 
 func TestNewTask(t *testing.T) {
 	t.Run("with valid data", func(t *testing.T) {
-		task, err := NewTask("test", "test -p command", PreTask)
+		task, err := NewTask("test", "test -p command", "host", PreTask)
 		assert.NoError(t, err)
 
 		assert.Equal(t, "test", task.name, "sets valid name")
@@ -18,14 +18,14 @@ func TestNewTask(t *testing.T) {
 	})
 
 	t.Run("with invalid data", func(t *testing.T) {
-		_, err := NewTask("test", "", PreTask)
+		_, err := NewTask("test", "", "host", PreTask)
 		assert.Error(t, err, "raises error")
 	})
 }
 
 func TestTaskExec(t *testing.T) {
 	t.Run("successful execution", func(t *testing.T) {
-		task, err := NewTask("echo", "echo tests", PreTask)
+		task, err := NewTask("echo", "echo tests", "host", PreTask)
 		assert.NoError(t, err)
 
 		err = task.exec()
@@ -35,7 +35,7 @@ func TestTaskExec(t *testing.T) {
 	})
 
 	t.Run("unsuccessful execution", func(t *testing.T) {
-		task, err := NewTask("copy", "cp non existing", PreTask)
+		task, err := NewTask("copy", "cp non existing", "host", PreTask)
 		assert.NoError(t, err)
 
 		err = task.exec()

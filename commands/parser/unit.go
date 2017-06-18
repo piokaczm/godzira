@@ -15,10 +15,11 @@ type unit struct {
 type interpretedUnit struct {
 	name    string
 	command string
+	host    string
 }
 
 func (u *unit) buildCopyCommand(addr, strategy string) (*interpretedUnit, error) {
-	interpretation := &interpretedUnit{name: u.Name}
+	interpretation := &interpretedUnit{name: u.Name, host: addr}
 	var err error
 
 	switch strategy {
@@ -33,9 +34,9 @@ func (u *unit) buildCopyCommand(addr, strategy string) (*interpretedUnit, error)
 }
 
 func (u *unit) buildLocalCommand() *interpretedUnit {
-	return &interpretedUnit{u.Name, u.Command}
+	return &interpretedUnit{u.Name, u.Command, localhost}
 }
 
 func (u *unit) buildRemoteCommand(addr string) *interpretedUnit {
-	return &interpretedUnit{u.Name, fmt.Sprintf("ssh %s %s", addr, u.Command)}
+	return &interpretedUnit{u.Name, fmt.Sprintf("ssh %s %s", addr, u.Command), addr}
 }

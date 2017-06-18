@@ -16,7 +16,7 @@ func TestNewQueue(t *testing.T) {
 func TestAppend(t *testing.T) {
 	t.Run("with pretask", func(t *testing.T) {
 		queue := NewQueue()
-		task, err := NewTask("test", "test", PreTask)
+		task, err := NewTask("test", "test", "host", PreTask)
 		assert.NoError(t, err)
 
 		err = queue.Append(task)
@@ -28,7 +28,7 @@ func TestAppend(t *testing.T) {
 
 	t.Run("with posttask", func(t *testing.T) {
 		queue := NewQueue()
-		task, err := NewTask("test", "test", PostTask)
+		task, err := NewTask("test", "test", "host", PostTask)
 		assert.NoError(t, err)
 
 		err = queue.Append(task)
@@ -40,7 +40,7 @@ func TestAppend(t *testing.T) {
 
 	t.Run("with deploy task", func(t *testing.T) {
 		queue := NewQueue()
-		task, err := NewTask("test", "test", DeployTask)
+		task, err := NewTask("test", "test", "host", DeployTask)
 		assert.NoError(t, err)
 
 		err = queue.Append(task)
@@ -52,7 +52,7 @@ func TestAppend(t *testing.T) {
 
 	t.Run("with not supported type", func(t *testing.T) {
 		queue := NewQueue()
-		task, err := NewTask("test", "test", 10)
+		task, err := NewTask("test", "test", "host", 10)
 		assert.NoError(t, err)
 
 		err = queue.Append(task)
@@ -65,7 +65,7 @@ func TestQueueExec(t *testing.T) {
 	queue := NewQueue()
 
 	t.Run("successful execution", func(t *testing.T) {
-		task, err := NewTask("echo", "echo", DeployTask)
+		task, err := NewTask("echo", "echo", "host", DeployTask)
 		assert.NoError(t, err)
 		err = queue.Append(task)
 		assert.NoError(t, err)
@@ -78,12 +78,12 @@ func TestQueueExec(t *testing.T) {
 	})
 
 	t.Run("unsuccessful execution", func(t *testing.T) {
-		task, err := NewTask("failing", "cp non existing", PreTask)
+		task, err := NewTask("failing", "cp non existing", "host", PreTask)
 		assert.NoError(t, err)
 		err = queue.Append(task)
 		assert.NoError(t, err)
 
-		task, err = NewTask("echo", "echo", PreTask)
+		task, err = NewTask("echo", "echo", "host", PreTask)
 		assert.NoError(t, err)
 		err = queue.Append(task)
 		assert.NoError(t, err)
@@ -98,7 +98,7 @@ func TestQueueExec(t *testing.T) {
 
 func TestQueueIsNotEmpty(t *testing.T) {
 	queue := NewQueue()
-	task, err := NewTask("test", "test", DeployTask)
+	task, err := NewTask("test", "test", "host", DeployTask)
 	assert.NoError(t, err)
 	err = queue.Append(task)
 	assert.NoError(t, err)

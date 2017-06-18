@@ -15,6 +15,7 @@ const (
 	copyLabel   = "copy"
 	localLabel  = "local"
 	remoteLabel = "remote"
+	localhost   = "localhost"
 )
 
 // Read accepts parsed config and queue as arguments and basing on the config appends
@@ -122,7 +123,12 @@ func (cr *configReader) read(conf *Config) {
 		}
 
 		for _, interpretedUnit := range interpretedUnits {
-			cr.appendTask(interpretedUnit.name, interpretedUnit.command, task.PreTask)
+			cr.appendTask(
+				interpretedUnit.name,
+				interpretedUnit.command,
+				interpretedUnit.host,
+				task.PreTask,
+			)
 		}
 	}
 
@@ -134,7 +140,12 @@ func (cr *configReader) read(conf *Config) {
 		}
 
 		for _, interpretedUnit := range interpretedUnits {
-			cr.appendTask(interpretedUnit.name, interpretedUnit.command, task.PostTask)
+			cr.appendTask(
+				interpretedUnit.name,
+				interpretedUnit.command,
+				interpretedUnit.host,
+				task.PostTask,
+			)
 		}
 	}
 
@@ -148,9 +159,19 @@ func (cr *configReader) addDeployTask(conf *Config) error {
 	for _, host := range conf.Environments[conf.env] {
 		switch conf.Strategy {
 		case rsync:
-			cr.appendTask("deployment", fmt.Sprintf("%s %s %s %s", rsync, rsyncArg, conf.BinPath, host.Path), task.DeployTask)
+			cr.appendTask(
+				"deployment",
+				fmt.Sprintf("%s %s %s %s:%s", rsync, rsyncArg, conf.BinPath, host.address(), host.Path),
+				host.address(),
+				task.DeployTask,
+			)
 		case scp:
-			cr.appendTask("deployment", fmt.Sprintf("%s %s %s", scp, conf.BinPath, fmt.Sprintf("%s:%s", host.address(), host.Path)), task.DeployTask)
+			cr.appendTask(
+				"deployment",
+				fmt.Sprintf("%s %s %s", scp, conf.BinPath, fmt.Sprintf("%s:%s", host.address(), host.Path)),
+				host.address(),
+				task.DeployTask,
+			)
 		default:
 			return unsupportedStrategy("deployment", conf.Strategy) // TODO: extract this deployment string ffs
 		}
@@ -161,12 +182,12 @@ func (cr *configReader) addDeployTask(conf *Config) error {
 
 func (cr *configReader) addTestTask(conf *Config) {
 	if conf.Test {
-		cr.appendTask("run tests", "go test ./...", task.PreTask)
+		cr.appendTask("run tests", "go test ./...", localhost, task.PreTask)
 	}
 }
 
-func (cr *configReader) appendTask(name, command string, taskType int) {
-	task, err := task.NewTask(name, command, taskType)
+func (cr *configReader) appendTask(name, command, host string, taskType int) {
+	task, err := task.NewTask(name, command, host, taskType)
 	if err != nil {
 		cr.errors = append(cr.errors, err)
 	}

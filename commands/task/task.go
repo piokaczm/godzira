@@ -33,6 +33,7 @@ type Task struct {
 	output   []byte   // output is cmd's output
 	err      error    // error stores errors raised during command execution for printing it in fail()
 	taskType int      // taskType is used for assignment of a task to a proper queue
+	host     string   // name of host (and for remote tasks user's name) where the task is executed
 }
 
 // command represents an actual command which will be executed during deployment process.
@@ -42,12 +43,13 @@ type command struct {
 }
 
 // NewTask is a Task constructor. If a command is malformed it will return an error.
-func NewTask(name, command string, taskType int) (*Task, error) {
+func NewTask(name, command, host string, taskType int) (*Task, error) {
 	cmd, err := newCommand(command)
 	return &Task{
 		name:     name,
 		cmd:      cmd,
 		taskType: taskType,
+		host:     host,
 	}, err
 }
 
@@ -79,13 +81,14 @@ func (t *Task) run() error {
 }
 
 func (t *Task) print() {
-	fmt.Printf("%7s : executing task '%s'\n", yellow(time.Now().Format(format)), bold(t.name))
+	fmt.Printf("%7s | %-25s | executing task '%s'\n", yellow(time.Now().Format(format)), t.host, bold(t.name))
 }
 
 func (t *Task) fail() {
 	fmt.Printf(
-		"%7s : task failure '%s'\nTASK OUTPUT:\n%s\nERROR:\n%s\n",
+		"%7s | %-25s | task failure '%s'\nTASK OUTPUT:\n%s\nERROR:\n%s\n",
 		yellow(time.Now().Format(format)),
+		t.host,
 		boldRed(t.name),
 		red(string(t.output)),
 		red(t.err),

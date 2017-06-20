@@ -2,128 +2,87 @@ package commands
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/codegangsta/cli"
-	"github.com/fatih/color"
-	"os/exec"
-	"strings"
+	"github.com/piokaczm/godzira/commands/parser"
+	"github.com/piokaczm/godzira/commands/printer"
+	"github.com/piokaczm/godzira/commands/slack"
+	"github.com/piokaczm/godzira/commands/task"
 )
 
 const (
-	scp       = "scp"
-	rsync     = "rsync"
-	rsyncArgs = "-chavzP"
+	errorLabel = "[ error ]"
+	infoLabel  = "[ info  ]"
+	configPath = "config/deploy.yml"
+	deployed   = `
+
+                   ,:',:',:'
+              __||_||_||_||__
+         ____["""""""""""""""]____
+         \ " '''''''''''''''''''' \
+  ~^~^~^~^~^^~^~^~^~^~^~^~^~~^~^~^^~~^~^
+     _            _                      _ 
+  __| | ___ _ __ | | ___  _   _  ___  __| |
+ / _  |/ _ \ '_ \| |/ _ \| | | |/ _ \/ _  |
+| (_| |  __/ |_) | | (_) | |_| |  __/ (_| |
+ \__,_|\___| .__/|_|\___/ \__, |\___|\__,_|
+           |_|            |___/            
+  `
 )
 
-// Deploy is a wrapper for whole deply process.
+// Deploy is a wrapper for deploy process.
 func Deploy(c *cli.Context) {
-	color.Set(color.FgYellow)
-	green := color.New(color.FgGreen, color.Bold)
+	printer.PrintInfo(infoLabel, "Godzira is starting deployment...")
+	validateCommand(c)
 
-	deploy_env := c.Args()[0] // try to extract it somehow
-	config := getConfig()
-
-	if config.Godep {
-		_, msg, err := restoreDependencies()
-		checkErr(err)
-		green.Println(msg)
-	}
-
-	if config.Test {
-		_, msg, e := runTests(config.Vendor)
-		checkErr(e)
-		green.Println(msg)
-	}
-
-	builder := Builder{}
-	deployer := Deployer{}
-	deployApp(builder, deployer, config, deploy_env)
-}
-
-// deployApp is a function which builds a binary using provided builder and then iterates over
-// servers and deploys it to them.
-func deployApp(builder BinaryBuilder, deployer BinaryDeployer, config Configuration, env string) {
-	green := color.New(color.FgGreen, color.Bold)
-	buildErr, buildMsg := buildBinary(&config, builder)
-	checkErr(buildErr)
-	green.Println(buildMsg)
-	var binary string
-
-	servers, err := getServers(config.Environments, env)
-	checkErr(err)
-	if notBlank(config.BinName) {
-		binary = config.BinName
-	} else {
-		binary = getDir()
-	}
-
-	if slackEnabled(config.Slack) {
-		startMsg(config.Slack, env)
-	}
-
-	for _, server := range servers {
-		deployMsg := runDeploy(&config, server, env, binary, deployer)
-		green.Println(deployMsg)
-	}
-
-	// asci art
-	fmt.Println(deployed)
-	if slackEnabled(config.Slack) {
-		finishMsg(config.Slack, env)
-	}
-}
-
-// runTests runs all availabele tests.
-// If one of them fails, deploy stops.
-func runTests(vendor bool) ([]byte, string, error) {
-	args := []string{"test", "-v"}
-	if vendor {
-		dirs, e := filterVendor()
-		checkErr(e)
-		args = append(args, dirs...)
-	} else {
-		args = append(args, "./...")
-	}
-
-	return execCommand(
-		"go",
-		args,
-		"Running tests...",
-		"Tests passed!")
-}
-
-// filterVendor filters vendor directory for tests.
-func filterVendor() ([]string, error) {
-	list := exec.Command("go", "list", "./...")
-	grep := exec.Command("grep", "-v", "/vendor/")
-	listOut, _ := list.StdoutPipe()
-	list.Start()
-	grep.Stdin = listOut
-
-	out, err := grep.Output()
+	env := c.Args()[0]
+	queue := task.NewQueue()
+	config, err := parser.New(configPath, env)
 	if err != nil {
-		return nil, err
-	} else {
-		dirs := strings.Split(string(out), "\n")
-		dirs = dirs[:len(dirs)-1]
-		return dirs, nil
+		printErrorsAndTerminate(err)
 	}
+
+	slackClient := slack.New(
+		config.Slack.Webhook,
+		config.Slack.Channel,
+		config.Slack.Emoji,
+		config.Slack.Name,
+	)
+
+	errors := parser.Read(config, queue)
+	if len(errors) > 0 {
+		printErrorsAndTerminate(errors...)
+	}
+
+	slackClient.PostSuccess(fmt.Sprintf("*%s* started deploying *%s* to *%s*!", os.Getenv("USER"), config.Name, env))
+	err = queue.Exec()
+	if err != nil {
+		slackClient.PostDanger(fmt.Sprintf("Deployment of *%s* to *%s* failed!", config.Name, env))
+		os.Exit(1)
+	}
+
+	slackClient.PostSuccess(fmt.Sprintf("*%s* was succesfully deployed to *%s*!", config.Name, env))
+	fmt.Println(deployed)
 }
 
-// restoreDependencies restores all dependencies using godep.
-// Probably it should be removed.
-func restoreDependencies() ([]byte, string, error) {
-	return execCommand(
-		"godep",
-		[]string{"restore"},
-		"Restoring dependencies...",
-		"Dependencies restored!")
+func printErrorsAndTerminate(errors ...error) {
+	for _, err := range errors {
+		printer.PrintWarning(errorLabel, err.Error())
+	}
+	os.Exit(1)
 }
 
-// execCommand is a wrapper for running shell commands.
-// It returns last provided message for testing purposes (no better ide atm).
-func execCommand(name string, args []string, start_msg string, finish_msg string) ([]byte, string, error) {
-	color.Yellow(start_msg)
+func validateCommand(c *cli.Context) {
+	// check if at least env was passed to the command
+	if len(c.Args()) < 1 {
+		printer.PrintWarning(errorLabel, "please provide deployment env")
+		os.Exit(1)
+	}
 
-	output, err := exec.Command(name, args...).Output()
-	return output, finish_msg, err
+	// check if config file exists
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		printer.PrintWarning(errorLabel, "couldn't find config file 'config/deploy.yml'")
+		os.Exit(1)
+	}
 }

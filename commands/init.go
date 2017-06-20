@@ -1,20 +1,35 @@
 package commands
 
 import (
-	"github.com/codegangsta/cli"
+	"fmt"
 	"io"
 	"os"
+
+	"github.com/codegangsta/cli"
 )
 
-func Config(c *cli.Context) {
-	os.Mkdir("./config", 0777)
+// Init creates config dir along with empty deploy.yml file with link to example configuration.
+func Init(c *cli.Context) {
+	err := os.Mkdir("./config", 0777)
+	if err != nil {
+		printErrorsAndTerminate(fmt.Errorf("an error occured while creating config dir : %s", err))
+	}
 
-	f, err := os.Create("config/deploy.yml")
-	checkErr(err)
-	defer f.Close()
-	const (
-		comment = "# see example config file at github.com/piokaczm/godeploy"
-	)
+	f, err := os.Create(configPath)
+	if err != nil {
+		printErrorsAndTerminate(fmt.Errorf("an error occured while trying to create '%s' : %s", configPath, err))
+	}
+	defer close(f)
 
-	io.WriteString(f, comment)
+	_, err = io.WriteString(f, "# see example config file at github.com/piokaczm/godzira")
+	if err != nil {
+		printErrorsAndTerminate(fmt.Errorf("an error occured while trying to write a comment to config file : %s", err))
+	}
+}
+
+func close(c io.Closer) {
+	err := c.Close()
+	if err != nil {
+		printErrorsAndTerminate(err)
+	}
 }

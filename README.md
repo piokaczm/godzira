@@ -1,6 +1,6 @@
-#Godzira
+# Godzira
 
-##Smash your apps to servers just like Godzira would smash a city!
+## Smash your apps to servers just like Godzira would smash a city!
 [![Build Status](https://travis-ci.org/piokaczm/godzira.svg?branch=master)](https://travis-ci.org/piokaczm/godzira)
 
 Simple deploy tool:
@@ -8,13 +8,13 @@ Simple deploy tool:
 - configure tasks to run before or after deployment
 - send notifications to Slack
 
-###Installation
+### Installation
 
 ```
 go install github.com/piokaczm/godzira
 ```
 
-###Usage
+### Usage
 
 In your app directory run
 
@@ -30,7 +30,7 @@ After setting it up just run
 godzira deploy [environment]
 ```
 
-###Configuration
+### Configuration
 
 You need to properly set your configuration file. Structure should look something like this:
 
@@ -80,7 +80,7 @@ As for now godzira supports 3 `type` labels for tasks:
 - `remote` tasks which are supposed to run on each host for given environment
 - `copy` for copying files from local machine to each host (where `path` is local path to the file and `destination` is where it should be copied to)
 
-###Strategy
+### Strategy
 
 Godzira provides two deploy strategies: `scp` and `rsync`.
 You can choose which one to use in your config file. If no strategy specified, the tool will use `rsync`.
